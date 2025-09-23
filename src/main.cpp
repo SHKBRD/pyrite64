@@ -14,16 +14,29 @@
 #include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlgpu3.h"
-#include <stdio.h>          // printf, fprintf
-#include <stdlib.h>         // abort
+#include <stdio.h>
+#include <stdlib.h>
 #include <SDL3/SDL.h>
 
 #include "editor/editorScene.h"
 
-// This example doesn't compile with Emscripten yet! Awaiting SDL3 support.
-#ifdef __EMSCRIPTEN__
-#include "../libs/emscripten/emscripten_mainloop_stub.h"
-#endif
+namespace
+{
+  // the vertex input layout
+  struct Vertex
+  {
+    float x, y, z;      //vec3 position
+    float r, g, b, a;   //vec4 color
+  };
+
+  // a list of vertices
+  Vertex vertices[]
+  {
+    {0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f},     // top vertex
+    {-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f},   // bottom left vertex
+    {0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f}     // bottom right vertex
+  };
+}
 
 // Main code
 int main(int, char**)
@@ -103,6 +116,121 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     Editor::Scene editorScene{};
 
+    // 3D TEST
+    // create the vertex buffer
+    SDL_GPUBufferCreateInfo bufferInfo{};
+    bufferInfo.size = sizeof(vertices);
+    bufferInfo.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
+    SDL_GPUBuffer* vertexBuffer = SDL_CreateGPUBuffer(gpu_device, &bufferInfo);
+    // SDL_ReleaseGPUBuffer(device, vertexBuffer);
+
+    // create a transfer buffer to upload to the vertex buffer
+    SDL_GPUTransferBufferCreateInfo transferInfo{};
+    transferInfo.size = sizeof(vertices);
+    transferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
+    SDL_GPUTransferBuffer* transferBuffer = SDL_CreateGPUTransferBuffer(gpu_device, &transferInfo);
+
+    // map the transfer buffer to a pointer
+    Vertex* data = (Vertex*)SDL_MapGPUTransferBuffer(gpu_device, transferBuffer, false);
+    SDL_memcpy(data, vertices, sizeof(vertices));
+    SDL_UnmapGPUTransferBuffer(gpu_device, transferBuffer);
+    // SDL_ReleaseGPUBuffer(gpu_device, vertexBuffer);
+    // SDL_ReleaseGPUTransferBuffer(gpu_device, transferBuffer);
+
+  // load the vertex shader code
+  size_t vertexCodeSize;
+  void* vertexCode = SDL_LoadFile("data/shader/main3d.vert.spv", &vertexCodeSize);
+
+  // create the vertex shader
+  SDL_GPUShaderCreateInfo vertexInfo{};
+  vertexInfo.code = (Uint8*)vertexCode; //convert to an array of bytes
+  vertexInfo.code_size = vertexCodeSize;
+  vertexInfo.entrypoint = "main";
+  vertexInfo.format = SDL_GPU_SHADERFORMAT_SPIRV; // loading .spv shaders
+  vertexInfo.stage = SDL_GPU_SHADERSTAGE_VERTEX; // vertex shader
+  vertexInfo.num_samplers = 0;
+  vertexInfo.num_storage_buffers = 0;
+  vertexInfo.num_storage_textures = 0;
+  vertexInfo.num_uniform_buffers = 0;
+  SDL_GPUShader* vertexShader = SDL_CreateGPUShader(gpu_device, &vertexInfo);
+
+  // free the file
+  SDL_free(vertexCode);
+  //SDL_ReleaseGPUShader(device, vertexShader);
+
+  // create the fragment shader
+  size_t fragmentCodeSize;
+  void* fragmentCode = SDL_LoadFile("data/shader/main3d.frag.spv", &fragmentCodeSize);
+
+  // create the fragment shader
+  SDL_GPUShaderCreateInfo fragmentInfo{};
+  fragmentInfo.code = (Uint8*)fragmentCode;
+  fragmentInfo.code_size = fragmentCodeSize;
+  fragmentInfo.entrypoint = "main";
+  fragmentInfo.format = SDL_GPU_SHADERFORMAT_SPIRV;
+  fragmentInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT; // fragment shader
+  fragmentInfo.num_samplers = 0;
+  fragmentInfo.num_storage_buffers = 0;
+  fragmentInfo.num_storage_textures = 0;
+  fragmentInfo.num_uniform_buffers = 0;
+
+  SDL_GPUShader* fragmentShader = SDL_CreateGPUShader(gpu_device, &fragmentInfo);
+
+  // free the file
+  SDL_free(fragmentCode);
+  //SDL_ReleaseGPUShader(device, fragmentShader);
+
+  SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
+  // bind shaders
+  pipelineInfo.vertex_shader = vertexShader;
+  pipelineInfo.fragment_shader = fragmentShader;
+  // draw triangles
+  pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+
+  // describe the vertex buffers
+  SDL_GPUVertexBufferDescription vertexBufferDesctiptions[1];
+  vertexBufferDesctiptions[0].slot = 0;
+  vertexBufferDesctiptions[0].input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+  vertexBufferDesctiptions[0].instance_step_rate = 0;
+  vertexBufferDesctiptions[0].pitch = sizeof(Vertex);
+
+  pipelineInfo.vertex_input_state.num_vertex_buffers = 1;
+  pipelineInfo.vertex_input_state.vertex_buffer_descriptions = vertexBufferDesctiptions;
+
+  // describe the vertex attribute
+  SDL_GPUVertexAttribute vertexAttributes[2];
+
+  // a_position
+  vertexAttributes[0].buffer_slot = 0; // fetch data from the buffer at slot 0
+  vertexAttributes[0].location = 0; // layout (location = 0) in shader
+  vertexAttributes[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3; //vec3
+  vertexAttributes[0].offset = 0; // start from the first byte from current buffer position
+
+  // a_color
+  vertexAttributes[1].buffer_slot = 0; // use buffer at slot 0
+  vertexAttributes[1].location = 1; // layout (location = 1) in shader
+  vertexAttributes[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT4; //vec4
+  vertexAttributes[1].offset = sizeof(float) * 3; // 4th float from current buffer position
+
+  pipelineInfo.vertex_input_state.num_vertex_attributes = 2;
+  pipelineInfo.vertex_input_state.vertex_attributes = vertexAttributes;
+
+  // describe the color target
+  SDL_GPUColorTargetDescription colorTargetDescriptions[1];
+  colorTargetDescriptions[0] = {};
+  colorTargetDescriptions[0].format = SDL_GetGPUSwapchainTextureFormat(gpu_device, window);
+
+  pipelineInfo.target_info.num_color_targets = 1;
+  pipelineInfo.target_info.color_target_descriptions = colorTargetDescriptions;
+
+  // create the pipeline
+  SDL_GPUGraphicsPipeline* graphicsPipeline = SDL_CreateGPUGraphicsPipeline(gpu_device, &pipelineInfo);
+
+  // we don't need to store the shaders after creating the pipeline
+  SDL_ReleaseGPUShader(gpu_device, vertexShader);
+  SDL_ReleaseGPUShader(gpu_device, fragmentShader);
+  // SDL_ReleaseGPUGraphicsPipeline(gpu_ŝdevice, graphicsPipeline);
+
     // Main loop
     bool done = false;
     while (!done)
@@ -162,12 +290,49 @@ int main(int, char**)
             target_info.mip_level = 0;
             target_info.layer_or_depth_plane = 0;
             target_info.cycle = false;
-            SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(command_buffer, &target_info, 1, nullptr);
 
-            // Render ImGui
-            ImGui_ImplSDLGPU3_RenderDrawData(draw_data, command_buffer, render_pass);
+          // TEST 3D
+          {
 
-            SDL_EndGPURenderPass(render_pass);
+              SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(command_buffer);
+
+              // where is the data
+              SDL_GPUTransferBufferLocation location{};
+              location.transfer_buffer = transferBuffer;
+              location.offset = 0; // start from the beginning
+
+              // where to upload the data
+              SDL_GPUBufferRegion region{};
+              region.buffer = vertexBuffer;
+              region.size = sizeof(vertices); // size of the data in bytes
+              region.offset = 0; // begin writing from the first vertex
+
+              // upload the data
+              SDL_UploadToGPUBuffer(copyPass, &location, &region, true);
+
+              // end the copy pass
+              SDL_EndGPUCopyPass(copyPass);
+          }
+
+            SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(command_buffer, &target_info, 1, nullptr);
+
+              // bind the graphics pipeline
+              SDL_BindGPUGraphicsPipeline(renderPass, graphicsPipeline);
+
+              // bind the vertex buffer
+              SDL_GPUBufferBinding bufferBindings[1];
+              bufferBindings[0].buffer = vertexBuffer; // index 0 is slot 0 in this example
+              bufferBindings[0].offset = 0; // start from the first byte
+              SDL_BindGPUVertexBuffers(renderPass, 0, bufferBindings, 1); // bind one buffer starting from slot 0
+
+              SDL_DrawGPUPrimitives(renderPass, 3, 1, 0, 0);
+
+
+              // Render ImGui
+              ImGui_ImplSDLGPU3_RenderDrawData(draw_data, command_buffer, renderPass);
+
+            SDL_EndGPURenderPass(renderPass);
+
         }
 
         // Submit the command buffer
