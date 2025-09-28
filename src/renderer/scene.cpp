@@ -92,48 +92,60 @@ void Renderer::Scene::draw()
   SDL_GPUTexture* swapchain_texture;
   SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, ctx.window, &swapchain_texture, nullptr, nullptr); // Acquire a swapchain texture
 
-  if (swapchain_texture != nullptr && !is_minimized) {
-    // Setup and start a render pass
-    SDL_GPUColorTargetInfo target_info = {};
-    target_info.texture = swapchain_texture;
-    target_info.clear_color = {0.12f, 0.12f, 0.12f, 0};
-    target_info.load_op = SDL_GPU_LOADOP_CLEAR;
-    target_info.store_op = SDL_GPU_STOREOP_STORE;
-    target_info.mip_level = 0;
-    target_info.layer_or_depth_plane = 0;
-    target_info.cycle = false;
-
-    {
-      ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
-
-      auto copyPass = SDL_BeginGPUCopyPass(command_buffer);
-      vertBuff->upload(*copyPass);
-      SDL_EndGPUCopyPass(copyPass);
-    }
-
-    SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(command_buffer, &target_info, 1, nullptr);
-    SDL_BindGPUGraphicsPipeline(renderPass, graphicsPipeline);
-
-    if (ctx.project)
-    {
-      // bind the vertex buffer
-      SDL_GPUBufferBinding bufferBindings[1];
-      vertBuff->addBinding(bufferBindings[0]);
-      SDL_BindGPUVertexBuffers(renderPass, 0, bufferBindings, 1); // bind one buffer starting from slot 0
-
-      SDL_Rect scissorFull{0,0, (int)draw_data->DisplaySize.x, (int)draw_data->DisplaySize.y};
-      SDL_Rect scissor3D{0,0, 640, 480};
-      //SDL_SetGPUScissor(renderPass, &scissor3D);
-      SDL_DrawGPUPrimitives(renderPass, 3, 1, 0, 0);
-      //SDL_SetGPUScissor(renderPass, &scissorFull);
-    }
-
-    // Render ImGui
-    ImGui_ImplSDLGPU3_RenderDrawData(draw_data, command_buffer, renderPass);
-
-    SDL_EndGPURenderPass(renderPass);
+  if(swapchain_texture == nullptr || is_minimized) {
+    SDL_SubmitGPUCommandBuffer(command_buffer);
+    return;
   }
 
+  // Setup and start a render pass
+  SDL_GPUColorTargetInfo targetInfo3D = {};
+  targetInfo3D.texture = swapchain_texture;
+  targetInfo3D.clear_color = {0.12f, 0.12f, 0.12f, 0};
+  targetInfo3D.load_op = SDL_GPU_LOADOP_CLEAR;
+  targetInfo3D.store_op = SDL_GPU_STOREOP_STORE;
+  targetInfo3D.mip_level = 0;
+  targetInfo3D.layer_or_depth_plane = 0;
+  targetInfo3D.cycle = false;
+
+  SDL_GPUColorTargetInfo targetInfo2D = {};
+  targetInfo2D.texture = swapchain_texture;
+  targetInfo2D.clear_color = {0,0,0,0};
+  targetInfo2D.load_op = SDL_GPU_LOADOP_CLEAR;
+  targetInfo2D.store_op = SDL_GPU_STOREOP_STORE;
+  targetInfo2D.mip_level = 0;
+  targetInfo2D.layer_or_depth_plane = 0;
+  targetInfo2D.cycle = false;
+
+  {
+    ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
+    auto copyPass = SDL_BeginGPUCopyPass(command_buffer);
+    vertBuff->upload(*copyPass);
+    SDL_EndGPUCopyPass(copyPass);
+  }
+
+  SDL_GPURenderPass* renderPass3D = SDL_BeginGPURenderPass(command_buffer, &targetInfo3D, 1, nullptr);
+  SDL_BindGPUGraphicsPipeline(renderPass3D, graphicsPipeline);
+
+  if (ctx.project)
+  {
+    // bind the vertex buffer
+    SDL_GPUBufferBinding bufferBindings[1];
+    vertBuff->addBinding(bufferBindings[0]);
+    SDL_BindGPUVertexBuffers(renderPass3D, 0, bufferBindings, 1); // bind one buffer starting from slot 0
+
+    SDL_Rect scissorFull{0,0, (int)draw_data->DisplaySize.x, (int)draw_data->DisplaySize.y};
+    SDL_Rect scissor3D{0,0, 640, 480};
+    //SDL_SetGPUScissor(renderPass, &scissor3D);
+    SDL_DrawGPUPrimitives(renderPass3D, 3, 1, 0, 0);
+    //SDL_SetGPUScissor(renderPass, &scissorFull);
+  }
+
+  SDL_EndGPURenderPass(renderPass3D);
+
+  // Render ImGui
+  SDL_GPURenderPass* renderPass2D = SDL_BeginGPURenderPass(command_buffer, &targetInfo2D, 1, nullptr);
+  ImGui_ImplSDLGPU3_RenderDrawData(draw_data, command_buffer, renderPass2D);
+  SDL_EndGPURenderPass(renderPass2D);
   // Submit the command buffer
   SDL_SubmitGPUCommandBuffer(command_buffer);
 }
