@@ -124,6 +124,7 @@ int main(int, char**)
     Editor::Actions::call(Editor::Actions::Type::PROJECT_OPEN, "/home/mbeboek/Documents/projects/pyrite64/n64/examples/hello_world");
 
     Renderer::Scene scene{};
+    ctx.scene = &scene;
     Editor::Main editorMain{ctx.gpu};
     Editor::Scene editorScene{};
 

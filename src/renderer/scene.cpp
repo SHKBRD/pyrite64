@@ -17,10 +17,7 @@
 namespace
 {
   SDL_GPUGraphicsPipeline* graphicsPipeline{nullptr};
-  Renderer::VertBuffer *vertBuff{nullptr};
   Renderer::Shader *shader3d{nullptr};
-
-  std::vector<Renderer::Vertex> vertices{};
 }
 
 Renderer::Scene::Scene()
@@ -69,14 +66,6 @@ Renderer::Scene::Scene()
   pipelineInfo.target_info.color_target_descriptions = colorTargetDescriptions;
 
   graphicsPipeline = SDL_CreateGPUGraphicsPipeline(ctx.gpu, &pipelineInfo);
-
-  vertices.push_back({0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f});
-  vertices.push_back({-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f});
-  vertices.push_back({0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f});
-
-  vertBuff = new Renderer::VertBuffer({sizeof(vertices), ctx.gpu});
-  vertBuff->setData(vertices);
-
 }
 
 Renderer::Scene::~Scene() {
@@ -88,14 +77,8 @@ void Renderer::Scene::update()
 {
 }
 
-Renderer::Framebuffer *fb;
-
 void Renderer::Scene::draw()
 {
-  if (!fb) {
-    fb = new Framebuffer();
-  }
-
   ImDrawData* draw_data = ImGui::GetDrawData();
   const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
 
@@ -118,33 +101,20 @@ void Renderer::Scene::draw()
   targetInfo2D.layer_or_depth_plane = 0;
   targetInfo2D.cycle = false;
 
-  {
-    ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
-    auto copyPass = SDL_BeginGPUCopyPass(command_buffer);
-    vertBuff->upload(*copyPass);
-    SDL_EndGPUCopyPass(copyPass);
-  }
+  ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
 
-  fb->resize(640, 480);
+  auto copyPass = SDL_BeginGPUCopyPass(command_buffer);
+  for (const auto &passCb : copyPasses) {
+    passCb.second(command_buffer, copyPass);
+  }
+  SDL_EndGPUCopyPass(copyPass);
 
   if (ctx.project)
   {
-    SDL_GPURenderPass* renderPass3D = SDL_BeginGPURenderPass(command_buffer, &fb->getTargetInfo(), 1, nullptr);
-    SDL_BindGPUGraphicsPipeline(renderPass3D, graphicsPipeline);
-
-    // bind the vertex buffer
-    SDL_GPUBufferBinding bufferBindings[1];
-    vertBuff->addBinding(bufferBindings[0]);
-    SDL_BindGPUVertexBuffers(renderPass3D, 0, bufferBindings, 1); // bind one buffer starting from slot 0
-
-    SDL_Rect scissorFull{0,0, (int)draw_data->DisplaySize.x, (int)draw_data->DisplaySize.y};
-    SDL_Rect scissor3D{0,0, 640, 480};
-    //SDL_SetGPUScissor(renderPass, &scissor3D);
-    SDL_DrawGPUPrimitives(renderPass3D, 3, 1, 0, 0);
-    //SDL_SetGPUScissor(renderPass, &scissorFull);
-    SDL_EndGPURenderPass(renderPass3D);
+    for (const auto &passCb : renderPasses) {
+      passCb.second(command_buffer, graphicsPipeline);
+    }
   }
-
 
   // Render ImGui
   SDL_GPURenderPass* renderPass2D = SDL_BeginGPURenderPass(command_buffer, &targetInfo2D, 1, nullptr);
