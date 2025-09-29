@@ -63,7 +63,7 @@ void Editor::AssetsBrowser::draw()
     if (ImGui::ImageButton(asset.name.c_str(), icon,
       {imageSize, imageSize}, {0,0}, {1,1}, {0,0,0,0}, {1,1,1,1}
     )) {
-      ctx.selAssetUUID = asset.uuid;
+      ctx.selAssetUUID = asset.uuid == ctx.selAssetUUID ? 0 : asset.uuid;
     }
 
     if(isSelected)ImGui::PopStyleColor(2);

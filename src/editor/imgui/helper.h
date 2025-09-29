@@ -3,6 +3,7 @@
 * @license MIT
 */
 #pragma once
+#include <string>
 #include "imgui.h"
 #include "IconsFontAwesome4.h"
 #include "../../utils/filePicker.h"
@@ -33,6 +34,17 @@ namespace ImGui::InpTable
 
       auto labelHidden = "##" + name;
       ImGui::InputText(labelHidden.c_str(), &str);
+  }
+
+  inline void addComboBox(const std::string &name, int &itemCurrent, const char* const items[], int itemsCount) {
+    ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::AlignTextToFramePadding();
+      ImGui::Text(name.c_str());
+      ImGui::TableSetColumnIndex(1);
+
+      auto labelHidden = "##" + name;
+      ImGui::Combo(labelHidden.c_str(), &itemCurrent, items, itemsCount);
   }
 
   inline void addPath(const std::string &name, std::string &str, bool isDir = false) {

@@ -69,6 +69,9 @@ add_executable(p64editor src/main.cpp
         src/project/assetManager.h
         src/project/assetManager.cpp
         src/utils/hash.h
+        src/editor/pages/parts/assetInspector.cpp
+        src/editor/pages/parts/assetInspector.h
+        src/utils/textureFormats.h
 )
 
 target_include_directories(p64editor PRIVATE

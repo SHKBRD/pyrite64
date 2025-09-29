@@ -57,7 +57,8 @@ void Editor::Scene::draw()
 
     ImGui::DockBuilderDockWindow("Project", dockLeftID);
     ImGui::DockBuilderDockWindow("3D-Viewport", dockSpaceID);
-    ImGui::DockBuilderDockWindow("Inspector", dockRightID);
+    ImGui::DockBuilderDockWindow("Asset", dockRightID);
+    ImGui::DockBuilderDockWindow("Object", dockRightID);
     ImGui::DockBuilderDockWindow("Assets", dockBottomID);
     ImGui::DockBuilderFinish(dockSpaceID);
   }
@@ -66,8 +67,12 @@ void Editor::Scene::draw()
     viewport3d.draw();
   ImGui::End();
 
-  ImGui::Begin("Inspector");
-    ImGui::Text("Inspector");
+  ImGui::Begin("Asset");
+    assetInspector.draw();
+  ImGui::End();
+
+  ImGui::Begin("Object");
+    ImGui::Text("Object");
   ImGui::End();
 
   ImGui::Begin("Assets");
