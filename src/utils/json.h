@@ -12,7 +12,6 @@ namespace Utils::JSON
 
   inline simdjson::simdjson_result<simdjson::dom::element> loadFile(const std::string &path) {
     auto jsonData = (char*)SDL_LoadFile(path.c_str(), nullptr);
-    assert(jsonData);
 
     if (!jsonData) {
       SDL_free(jsonData);

@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "IconsFontAwesome4.h"
 #include "../../utils/filePicker.h"
+#include "../../utils/color.h"
 
 namespace ImGui::InpTable
 {
@@ -78,6 +79,20 @@ namespace ImGui::InpTable
 
     auto labelHidden = "##" + name;
     ImGui::InputInt(labelHidden.c_str(), &value);
+  }
+
+  inline void addColor(const std::string &name, Utils::Color &color, bool withAlpha = true) {
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text(name.c_str());
+    ImGui::TableSetColumnIndex(1);
+
+    if (withAlpha) {
+      ImGui::ColorEdit4(name.c_str(), color.rgba, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+    } else {
+      ImGui::ColorEdit3(name.c_str(), color.rgba, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+    }
   }
 
   inline void addPath(const std::string &name, std::string &str, bool isDir = false) {

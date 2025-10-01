@@ -60,6 +60,7 @@ void Editor::Scene::draw()
 
     // Left
     ImGui::DockBuilderDockWindow("Project", dockLeftID);
+    ImGui::DockBuilderDockWindow("Scene", dockLeftID);
 
     // Right
     ImGui::DockBuilderDockWindow("Asset", dockRightID);
@@ -90,6 +91,12 @@ void Editor::Scene::draw()
   ImGui::Begin("Scenes");
     sceneBrowser.draw();
   ImGui::End();
+
+  if (ctx.project->getScenes().getLoadedScene()) {
+    ImGui::Begin("Scene");
+    sceneInspector.draw();
+    ImGui::End();
+  }
 
   ImGui::Begin("Assets");
     assetsBrowser.draw();

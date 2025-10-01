@@ -50,6 +50,9 @@ Project::SceneManager::~SceneManager() {
 }
 
 void Project::SceneManager::save() {
+  if (loadedScene) {
+    loadedScene->save();
+  }
 }
 
 void Project::SceneManager::add() {
@@ -68,6 +71,9 @@ void Project::SceneManager::add() {
 }
 
 void Project::SceneManager::loadScene(int id) {
-  delete loadedScene;
+  if (loadedScene) {
+    loadedScene->save();
+    delete loadedScene;
+  }
   loadedScene = new Scene(id);
 }
