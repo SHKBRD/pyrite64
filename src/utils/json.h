@@ -75,16 +75,3 @@ namespace Utils::JSON
     return *b;
   }
 }
-
-#define JSON_GET_STR(key) conf.key = Utils::JSON::readString(doc, #key);
-#define JSON_GET_INT(key) conf.key = (typeof(conf.key))Utils::JSON::readInt(doc, #key);
-#define JSON_GET_FLOAT(key) conf.key = Utils::JSON::readFloat(doc, #key);
-#define JSON_GET_BOOL(key) conf.key = Utils::JSON::readBool(doc, #key);
-
-#define JSON_SET_STR_LAST(key) \
-builder.append_key_value<#key>(conf.key);
-
-#define JSON_SET_STR(key) \
-  JSON_SET_STR_LAST(key) \
-  builder.append_comma();
-

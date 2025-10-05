@@ -74,11 +74,11 @@ void Project::AssetManager::reload() {
         auto doc = Utils::JSON::loadFile(pathMeta);
         if (doc.is_object()) {
           auto &conf = entry.conf;
-          JSON_GET_INT(format);
-          JSON_GET_INT(baseScale);
-          JSON_GET_INT(compression);
-          JSON_GET_BOOL(gltfBVH);
-          JSON_GET_BOOL(exclude);
+          conf.format = Utils::JSON::readInt(doc, "format");
+          conf.baseScale = Utils::JSON::readInt(doc, "baseScale");
+          conf.compression = (ComprTypes)Utils::JSON::readInt(doc, "compression");
+          conf.gltfBVH = Utils::JSON::readBool(doc, "gltfBVH");
+          conf.exclude = Utils::JSON::readBool(doc, "exclude");
         }
       }
 

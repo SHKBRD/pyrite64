@@ -3,33 +3,27 @@
 * @license MIT
 */
 #include "project.h"
-#include <optional>
-#include "../context.h"
 #include "../utils/fs.h"
 
 #include "../utils/json.h"
+#include "../utils/jsonBuilder.h"
 
 using namespace simdjson;
 
 std::string Project::ProjectConf::serialize() const {
-  builder::string_builder builder{};
-  builder.start_object();
-  builder.append_key_value<"name">(name);
-  builder.append_comma();
-  builder.append_key_value<"romName">(romName);
-  builder.append_comma();
-  builder.append_key_value<"pathEmu">(pathEmu);
-  builder.append_comma();
-  builder.append_key_value<"pathN64Inst">(pathN64Inst);
-  builder.end_object();
-  return {builder.c_str()};
+  Utils::JSON::Builder builder{};
+  builder.set("name", name);
+  builder.set("romName", romName);
+  builder.set("pathEmu", pathEmu);
+  builder.set("pathN64Inst", pathN64Inst);
+  return builder.toString();
 }
 
 void Project::Project::deserialize(const simdjson_result<dom::element> &doc) {
-  JSON_GET_STR(name);
-  JSON_GET_STR(romName);
-  JSON_GET_STR(pathEmu);
-  JSON_GET_STR(pathN64Inst);
+  conf.name = Utils::JSON::readString(doc, "name");
+  conf.romName = Utils::JSON::readString(doc, "romName");
+  conf.pathEmu = Utils::JSON::readString(doc, "pathEmu");
+  conf.pathN64Inst = Utils::JSON::readString(doc, "pathN64Inst");
 }
 
 Project::Project::Project(const std::string &path)
