@@ -54,6 +54,7 @@ void Editor::ObjectInspector::draw() {
   }
 
   uint64_t compDelUUID = 0;
+  Project::Component::Entry *compCopy = nullptr;
   for (auto &comp : obj->components)
   {
     ImGui::PushID(&comp);
@@ -68,6 +69,9 @@ void Editor::ObjectInspector::draw() {
 
       if(ImGui::BeginPopupContextItem("CompCtx"))
       {
+        if (ImGui::MenuItem(ICON_FA_CLONE " Duplicate")) {
+          compCopy = &comp;
+        }
         if (ImGui::MenuItem(ICON_FA_TRASH " Delete")) {
           compDelUUID = comp.uuid;
         }
@@ -79,6 +83,10 @@ void Editor::ObjectInspector::draw() {
     ImGui::PopID();
   }
 
+  if (compCopy) {
+    obj->addComponent(compCopy->id);
+    obj->components.back().name = compCopy->name + " Copy";
+  }
   if (compDelUUID) {
     obj->removeComponent(compDelUUID);
   }
