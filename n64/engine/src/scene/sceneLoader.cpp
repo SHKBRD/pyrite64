@@ -68,12 +68,14 @@ void P64::Scene::loadScene() {
 
   stringTable = (char*)loadSubFile('s');
 
+  debugf("Objects: %lu\n", conf.objectCount);
   if(conf.objectCount)
   {
+/*
     objStaticMats = (T3DMat4FP*)(loadSubFile('m'));
     auto currStaticMats = objStaticMats;
     data_cache_hit_writeback(objStaticMats, conf.objectCount * sizeof(T3DMat4FP));
-
+*/
     auto *objFileStart = (char*)(loadSubFile('o'));
     uint32_t camIdx = 0;
     uint32_t camCount = 0;
@@ -87,7 +89,7 @@ void P64::Scene::loadScene() {
     }
 
     cameras.resize(camCount);
-
+/*
     // only process static meshes, record all into one block
     objFile = objFileStart;
     rspq_block_begin();
@@ -105,13 +107,15 @@ void P64::Scene::loadScene() {
       objFile += obj->size;
     }
     dplObjects = rspq_block_end();
-
+*/
     // now process all other objects
     objFile = objFileStart;
     for(uint32_t i=0; i<conf.objectCount; ++i)
     {
       ObjectEntry* obj = (ObjectEntry*)objFile;
       uint32_t objType = (obj->type & OBJ_TYPE_ACTOR_MASK) ? OBJ_TYPE_ACTOR : obj->type;
+
+      debugf("OBJECT: type=%d, size=%d\n", obj->type, obj->size);
 
       switch (objType)
       {

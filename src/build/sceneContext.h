@@ -14,6 +14,7 @@ namespace Build
   {
     std::vector<std::string> files{};
     Utils::BinaryFile fileScene{};
+    Utils::BinaryFile fileObj{};
     StringTable strTable{};
   };
 }

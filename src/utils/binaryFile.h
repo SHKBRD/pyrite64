@@ -96,9 +96,10 @@ namespace Utils
         dataPos = pos;
       }
 
-      uint32_t posPush() {
+      uint32_t posPush(uint32_t newPos) {
         uint32_t oldPos = getPos();
         posStack.push_back(oldPos);
+        setPos(newPos);
         return oldPos;
       }
 

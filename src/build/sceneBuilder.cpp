@@ -22,17 +22,37 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
 {
   std::string fileNameScene = "s" + Utils::padLeft(std::to_string(scene.id), '0', 4);
   std::string fileNameStr = fileNameScene + "s";
+  std::string fileNameObj = fileNameScene + "o";
 
   std::unique_ptr<Project::Scene> sc{new Project::Scene(scene.id)};
 
   auto fsDataPath = fs::absolute(fs::path{project.getPath()} / "filesystem" / "p64");
 
   uint32_t flags = 0;
-  uint32_t objCount = 0;
+  uint32_t objCount = sc->objectsMap.size();
 
   if (sc->conf.doClearDepth)flags |= FLAG_CLR_DEPTH;
   if (sc->conf.doClearColor)flags |= FLAG_CLR_COLOR;
   if (sc->conf.fbFormat)flags |= FLAG_SCR_32BIT;
+
+  ctx.fileObj = {};
+  for (auto obj : sc->objectsMap) {
+    ctx.fileObj.write<uint16_t>(0); // @TODO type
+    auto posSize = ctx.fileObj.getPos();
+    ctx.fileObj.write<uint16_t>(0);
+
+    // DATA
+    ctx.fileObj.write<uint32_t>(42);
+    ctx.fileObj.write<uint32_t>(42);
+
+    auto size = ctx.fileObj.getPos() - posSize + 2;
+
+    ctx.fileObj.posPush(posSize);
+      ctx.fileObj.write<uint16_t>(size);
+    ctx.fileObj.posPop();
+  }
+
+  ctx.fileObj.writeToFile(fsDataPath / fileNameObj);
 
   ctx.fileScene = {};
   ctx.fileScene.write<uint16_t>(sc->conf.fbWidth);
@@ -47,4 +67,5 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
 
   ctx.files.push_back("filesystem/p64/" + fileNameScene);
   ctx.files.push_back("filesystem/p64/" + fileNameStr);
+  ctx.files.push_back("filesystem/p64/" + fileNameObj);
 }
