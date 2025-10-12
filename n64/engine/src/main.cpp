@@ -41,10 +41,10 @@ int main()
   // default VI setup, can be overwritten by the scene load later onŝ
   vi_init();
   vi_set_dedither(false);
-  vi_set_aa_mode(vi_aa_mode_t::VI_AA_MODE_RESAMPLE);
+  vi_set_aa_mode(VI_AA_MODE_RESAMPLE);
   vi_set_interlaced(false);
   vi_set_divot(false);
-  vi_set_gamma(vi_gamma_t::VI_GAMMA_DISABLE);
+  vi_set_gamma(VI_GAMMA_DISABLE);
 
   P64::MatrixManager::reset();
   P64::VI::SwapChain::init();

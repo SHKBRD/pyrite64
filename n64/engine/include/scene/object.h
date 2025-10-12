@@ -12,8 +12,29 @@ namespace P64
     private:
 
     public:
+      struct CompRef
+      {
+        uint8_t type{};
+        uint8_t flags{};
+        uint16_t offset{};
+      };
+
       uint16_t id{};
-      // @TODO: avoid vector
-      std::vector<uint32_t> compRefs{};
+
+      uint16_t compCount{0};
+
+      // component references, this is then also followed by a buffer for the actual data
+      // the object allocation logic keeps extra space to fit everything
+
+      //CompRef compRefs[];
+      //uint8_t compData[];
+
+      [[nodiscard]] CompRef* getCompRefs() const {
+        return (CompRef*)((uint8_t*)this + sizeof(Object));
+      }
+
+      [[nodiscard]] char* getCompData() const {
+        return (char*)getCompRefs() + sizeof(CompRef) * compCount;
+      }
   };
 }

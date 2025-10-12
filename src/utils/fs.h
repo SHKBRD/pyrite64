@@ -7,7 +7,7 @@
 namespace Utils::FS
 {
   inline std::string loadTextFile(const std::string &path) {
-    FILE *file = fopen(path.c_str(), "r");
+    FILE *file = fopen(path.c_str(), "rb");
     if(!file) {
       return "";
     }

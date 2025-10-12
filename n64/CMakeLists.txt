@@ -37,4 +37,6 @@ add_executable(n64_engine
         engine/src/scene/sceneLoader.cpp
         engine/include/scene/object.h
         engine/include/scene/components/code.h
+        engine/include/scene/componentTable.h
+        engine/include/scene/componentTable.cpp
 )

@@ -14,6 +14,7 @@
 #include "lib/logger.h"
 #include "lib/matrixManager.h"
 #include "lib/assetManager.h"
+#include "scene/componentTable.h"
 #include "script/scriptTable.h"
 
 namespace {
@@ -23,7 +24,6 @@ namespace {
   struct ObjectEntry {
     uint16_t type;
     uint16_t id;
-    uint16_t size;
     // data follows
   };
 
@@ -62,7 +62,7 @@ void P64::Scene::loadScene() {
 
   stringTable = (char*)loadSubFile('s');
 
-  debugf("Objects: %lu\n", conf.objectCount);
+  //debugf("Objects: %lu\n", conf.objectCount);
   if(conf.objectCount)
   {
 /*
@@ -70,73 +70,71 @@ void P64::Scene::loadScene() {
     auto currStaticMats = objStaticMats;
     data_cache_hit_writeback(objStaticMats, conf.objectCount * sizeof(T3DMat4FP));
 */
-    auto *objFileStart = (char*)(loadSubFile('o'));
-    uint32_t camIdx = 0;
-    uint32_t camCount = 0;
+    auto *objFileStart = (uint8_t*)(loadSubFile('o'));
 
     // pre-scan objects to get counts
     auto *objFile = objFileStart;
-    for(uint32_t i=0; i<conf.objectCount; ++i) {
-      ObjectEntry* obj = (ObjectEntry*)objFile;
-      if(obj->type == OBJ_TYPE_CAMERA)++camCount;
-      objFile += obj->size;
-    }
+    //cameras.resize(camCount);
 
-    cameras.resize(camCount);
-/*
-    // only process static meshes, record all into one block
-    objFile = objFileStart;
-    rspq_block_begin();
-    for(uint32_t i=0; i<conf.objectCount; ++i)
-    {
-      ObjectEntry* obj = (ObjectEntry*)objFile;
-      if(obj->type == OBJ_TYPE_MESH) {
-        auto* objMesh = (ObjectEntryMesh*)obj;
-        objMesh->t3dmPath = (char*)((uint32_t)objMesh->t3dmPath + (uint32_t)stringTable);
-        auto model = AssetManager::getT3DM(objMesh->t3dmHash, objMesh->t3dmPath);
-
-        t3d_matrix_set(currStaticMats++, true);
-        t3d_model_draw(model);
-      }
-      objFile += obj->size;
-    }
-    dplObjects = rspq_block_end();
-*/
     // now process all other objects
     objFile = objFileStart;
     for(uint32_t i=0; i<conf.objectCount; ++i)
     {
       ObjectEntry* objEntry = (ObjectEntry*)objFile;
 
-      debugf("OBJECT: id=%d type=%d, size=%d\n", objEntry->id, objEntry->type, objEntry->size);
+      //debugf("OBJECT: id=%d type=%d\n", objEntry->id, objEntry->type);
 
       switch (objEntry->type)
       {
         case OBJ_TYPE_OBJECT: {
-          auto ptr = objFile + sizeof(ObjectEntry);
-          auto ptrEnd = objFile + objEntry->size;
-          debugf("ptr-ptrEnd: %p - %p\n", ptr, ptrEnd);
 
-          Object *obj = new Object();
-          obj->id = objEntry->id;
+          // pre-scan components to get total allocation size
+          uint32_t allocSize = sizeof(Object);
+          auto ptrIn = objFile + sizeof(ObjectEntry);
+          uint32_t compCount = 0;
+          while(ptrIn[1] != 0) {
+            auto compId = ptrIn[0];
+            auto argSize = ptrIn[1] * 4;
 
-          while(ptr < ptrEnd) {
-            uint16_t compId = ((uint16_t*)ptr)[0];
-            assert(compId == 0); // <- @TODO
+            const auto &compDef = COMP_TABLE[compId];
+            allocSize += compDef.allocSize;
+            allocSize += sizeof(Object::CompRef);
 
-            // CODE
-            uint16_t codeIdx = ((uint16_t*)ptr)[1];
-            auto scriptPtr = Script::getCodeByIndex(codeIdx);
-            assert(scriptPtr != nullptr);
-
-            obj->compRefs.push_back((uint32_t)(scriptPtr) & 0x00FF'FFFF);
-            objects.push_back(obj);
-
-            ptr += 4;
+            ptrIn += argSize;
+            ++compCount;
           }
 
-        } break;
+          void* objMem = malloc(allocSize); // @TODO: custom allocator
+          auto objCompTablePtr = (Object::CompRef*)((char*)objMem + sizeof(Object));
+          auto objCompDataPtr = (char*)(objCompTablePtr) + (sizeof(Object::CompRef) * compCount);
 
+          Object* obj = new(objMem) Object();
+          obj->id = objEntry->id;
+          obj->compCount = compCount;
+
+          ptrIn = objFile + sizeof(ObjectEntry);
+          while(ptrIn[1] != 0)
+          {
+            uint8_t compId = ptrIn[0];
+            uint8_t argSize = ptrIn[1] * 4;
+
+            const auto &compDef = COMP_TABLE[compId];
+            //debugf("Alloc: %lu bytes for comp %d (arg: %d)\n", compDef.allocSize, compId, argSize);
+
+            objCompTablePtr->type = compId;
+            objCompTablePtr->flags = 0;
+            objCompTablePtr->offset = objCompDataPtr - (char*)obj;
+            ++objCompTablePtr;
+
+            compDef.init(*obj, objCompDataPtr, ptrIn + 2);
+            ptrIn += argSize;
+          }
+
+          objects.push_back(obj);
+          objFile = ptrIn + 4;
+
+        } break;
+/*
         case OBJ_TYPE_CAMERA: {
           auto* objCam = (ObjectEntryCamera*)objEntry;
           auto &cam = cameras[camIdx++];
@@ -153,15 +151,12 @@ void P64::Scene::loadScene() {
             );
           }
         } break;
-
+*/
         default:
           debugf("Unknown object type: %04X\n", objEntry->type);
           break;
       }
 
-      objFile += objEntry->size;
-      // align to 4 bytes
-      objFile = (char*)(((uint32_t)objFile + 3) & ~3);
     }
 
     free(objFileStart);

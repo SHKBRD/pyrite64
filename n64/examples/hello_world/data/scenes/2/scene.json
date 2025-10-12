@@ -1,8 +1,8 @@
 {
 "conf": {"name":"Scene B",
-"fbWidth":320,
-"fbHeight":240,
-"fbFormat":0,"clearColor":[0.0,0.0,0.0,1.0],
+"fbWidth":640,
+"fbHeight":480,
+"fbFormat":0,"clearColor":[0.29754164814949036,0.601962149143219,0.9838709831237793,1.0],
 "doClearColor":true,
 "doClearDepth":true},
 "graph": {"id":0,

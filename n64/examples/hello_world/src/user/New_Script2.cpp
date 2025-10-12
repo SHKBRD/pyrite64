@@ -3,7 +3,7 @@
 
 namespace P64::Script::C3AF5D870988CBC0
 {
-  void update()
+  void update(Object& obj)
   {
    //
     auto pressed = joypad_get_buttons_pressed(JOYPAD_PORT_1);

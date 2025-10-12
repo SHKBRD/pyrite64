@@ -14,6 +14,7 @@
 #include "lib/assetManager.h"
 #include "audio/audioManager.h"
 #include "../audio/audioManagerPrivate.h"
+#include "scene/componentTable.h"
 #include "script/scriptTable.h"
 
 namespace
@@ -62,9 +63,10 @@ P64::Scene::~Scene()
     surface_free(&fb);
   }
 
-  /*for(auto actor : actors) {
-    delete actor;
-  }*/
+  for(auto obj : objects) {
+    obj->~Object();
+    free(obj);
+  }
 
   AudioManager::stopAll();
   MatrixManager::reset();
@@ -81,21 +83,18 @@ void P64::Scene::update(float deltaTime) {
 
   for(auto obj : objects)
   {
-    for (auto comp : obj->compRefs)
-    {
-      uint32_t compType = comp >> 24;
-      if (compType == 0) {
-        auto fn = (Script::FuncUpdate)(comp | 0x8000'0000);
-        fn();
-      } else {
-        assert(compType == 0);
-      }
+    auto compRefs = obj->getCompRefs();
+
+    for (uint32_t i=0; i<obj->compCount; ++i) {
+      const auto &compDef = COMP_TABLE[compRefs[i].type];
+      char* dataPtr = (char*)obj + compRefs[i].offset;
+      compDef.update(*obj, dataPtr);
     }
   }
 
   AudioManager::update();
 
-  P64::VI::SwapChain::nextFrame();
+  VI::SwapChain::nextFrame();
 }
 
 void P64::Scene::draw(float deltaTime)

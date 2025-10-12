@@ -48,6 +48,7 @@ namespace Project::Component::Code
     }
 
     ctx.fileObj.write<uint16_t>(id);
+    ctx.fileObj.write<uint16_t>(0);
   }
 
   const char* getter(void* user_data, int idx)

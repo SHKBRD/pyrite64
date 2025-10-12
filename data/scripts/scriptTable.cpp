@@ -2,6 +2,8 @@
 
 #include "script/scriptTable.h"
 
+namespace P64 { class Object; }
+
 namespace P64::Script
 {
 __CODE_DECL__

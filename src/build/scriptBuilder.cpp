@@ -26,7 +26,7 @@ void Build::buildScripts(Project::Project &project, SceneCtx &sceneCtx)
     auto uuidStr = std::format("{:016X}", script.uuid);
 
     srcEntries += "    " + uuidStr + "::update,\n";
-    srcDecl += "  namespace " + uuidStr + " { void update(); }\n";
+    srcDecl += "  namespace " + uuidStr + " { void update(Object& obj); }\n";
 
     sceneCtx.codeIdxMapUUID[script.uuid] = idx;
 

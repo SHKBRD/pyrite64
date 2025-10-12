@@ -41,27 +41,31 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
     auto &obj = *objEntry.second;
     ctx.fileObj.write<uint16_t>(0); // @TODO type
     ctx.fileObj.write<uint16_t>(obj.id);
-    auto posSize = ctx.fileObj.getPos();
-    ctx.fileObj.write<uint16_t>(0); // size, filled later
 
     // DATA
     for (auto &comp : obj.components) {
-      ctx.fileObj.write<uint16_t>(comp.id);
+      auto compPos = ctx.fileObj.getPos();
+      ctx.fileObj.skip(2);
+
       if (comp.id >= 0 && comp.id < Project::Component::TABLE.size()) {
         Project::Component::TABLE[comp.id].funcBuild(obj, comp, ctx);
       } else {
         Utils::Logger::log("Component ID not found: " + std::to_string(comp.id), Utils::Logger::LEVEL_ERROR);
         assert(false);
       }
+
+      ctx.fileObj.align(4);
+      auto size = (ctx.fileObj.getPos() - compPos) / 4;
+      assert(size < 256);
+
+      ctx.fileObj.posPush(compPos);
+        ctx.fileObj.write<uint8_t>(comp.id);
+        ctx.fileObj.write<uint8_t>(size);
+      ctx.fileObj.posPop();
+      //ctx.fileObj.write<uint16_t>(comp.id);
     }
 
-    auto size = ctx.fileObj.getPos() - posSize + 4;
-
-    ctx.fileObj.posPush(posSize);
-      ctx.fileObj.write<uint16_t>(size);
-    ctx.fileObj.posPop();
-
-    ctx.fileObj.align(4);
+    ctx.fileObj.write<uint32_t>(0);
   }
 
   ctx.fileObj.writeToFile(fsDataPath / fileNameObj);
