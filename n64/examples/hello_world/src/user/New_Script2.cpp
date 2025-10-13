@@ -16,7 +16,7 @@ namespace P64::Script::C3AF5D870988CBC0
     auto pressed = joypad_get_buttons_pressed(JOYPAD_PORT_1);
     if (pressed.b) {
       debugf("Arg: Scene-Id: %ld\n", data->sceneId);
-      SceneManager::load(1);
+      SceneManager::load(data->sceneId);
     }
   }
 }

@@ -15,17 +15,22 @@ namespace P64::Comp
 
     static uint32_t getAllocSize(uint16_t* initData)
     {
-      return sizeof(Code);
+      auto scriptPtr = Script::getCodeByIndex(initData[0]);
+      assert(scriptPtr.update != nullptr);
+      return sizeof(Code) + scriptPtr.dataSize;
     }
 
     static void init(Object& obj, Code* data, uint16_t* initData)
     {
-      //debugf("Init: %d %d\n", initData[0], initData[1]);
       auto scriptPtr = Script::getCodeByIndex(initData[0]);
-      assert(scriptPtr.update != nullptr);
+      // reserved: initData[1];
 
       data->funcUpdate = scriptPtr.update;
       data->funcDraw = nullptr;
+
+      if (scriptPtr.dataSize > 0) {
+        memcpy((char*)data + sizeof(Code), (char*)&initData[2], scriptPtr.dataSize);
+      }
     }
 
     static void update(Object& obj, Code* data) {

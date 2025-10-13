@@ -11,7 +11,8 @@
 "name":"a",
 "uuid":13219253809344067950,"pos":[0.0,0.0,0.0],"rot":[0.0,0.0,0.0,0.0],"scale":[0.0,0.0,0.0],"components":[{"id":0,
 "uuid":7191568259539507672,
-"name":"Code","data":{"script":14100591792882240448}
+"name":"Code","data":{"script":14100591792882240448,"args":{"speed":"1",
+"sceneId":"1"}}
 }],"children":[]},
 {"id":1,
 "name":"New Object (1)",
