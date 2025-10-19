@@ -34,7 +34,10 @@ namespace Renderer
       explicit Pipeline(const Info &info);
       ~Pipeline();
 
+      // SDL_GPUGraphicsPipeline* getPipeline() const { return pipeline; }
 
-      SDL_GPUGraphicsPipeline* getPipeline() const { return pipeline; }
+      void bind(SDL_GPURenderPass* pass) const {
+        SDL_BindGPUGraphicsPipeline(pass, pipeline);
+      }
   };
 }

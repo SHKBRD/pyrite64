@@ -23,8 +23,8 @@ namespace
 Editor::Viewport3D::Viewport3D()
 {
   passId = ++nextPassId;
-  ctx.scene->addRenderPass(passId, [this](SDL_GPUCommandBuffer* cmdBuff, SDL_GPUGraphicsPipeline* pipeline) {
-    onRenderPass(cmdBuff, pipeline);
+  ctx.scene->addRenderPass(passId, [this](SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene) {
+    onRenderPass(cmdBuff, renderScene);
   });
   ctx.scene->addCopyPass(passId, [this](SDL_GPUCommandBuffer* cmdBuff, SDL_GPUCopyPass *copyPass) {
     onCopyPass(cmdBuff, copyPass);
@@ -59,12 +59,12 @@ Editor::Viewport3D::~Viewport3D() {
   ctx.scene->removeCopyPass(passId);
 }
 
-void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, SDL_GPUGraphicsPipeline* pipeline)
+void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene)
 {
   SDL_GPURenderPass* renderPass3D = SDL_BeginGPURenderPass(
     cmdBuff, &fb.getTargetInfo(), 1, &fb.getDepthTargetInfo()
   );
-  SDL_BindGPUGraphicsPipeline(renderPass3D, pipeline);
+  renderScene.getPipeline("n64").bind(renderPass3D);
 
   camera.apply(uniGlobal);
   SDL_PushGPUVertexUniformData(cmdBuff, 0, &uniGlobal, sizeof(uniGlobal));
@@ -82,9 +82,6 @@ void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, SDL_GPUGrap
     }
     //child.draw(renderPass3D, cmdBuff);
   }
-
-  //obj.draw(renderPass3D, cmdBuff);
-  //obj2.draw(renderPass3D, cmdBuff);
 
   SDL_EndGPURenderPass(renderPass3D);
 }

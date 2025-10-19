@@ -21,6 +21,7 @@ namespace
 Renderer::Scene::Scene()
 {
   shaderN64 = std::make_unique<Shader>("n64", ctx.gpu);
+  shaderLines = std::make_unique<Shader>("lines", ctx.gpu);
 
   pipelineN64 = std::make_unique<Pipeline>(Pipeline::Info{
     .shader = *shaderN64,
@@ -31,6 +32,17 @@ Renderer::Scene::Scene()
       {SDL_GPU_VERTEXELEMENTFORMAT_SHORT4     , offsetof(Renderer::Vertex, pos)},
       {SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, offsetof(Renderer::Vertex, color)},
       {SDL_GPU_VERTEXELEMENTFORMAT_USHORT2    , offsetof(Renderer::Vertex, uv)},
+    }
+  });
+
+  pipelineLines = std::make_unique<Pipeline>(Pipeline::Info{
+    .shader = *shaderLines,
+    .prim = SDL_GPU_PRIMITIVETYPE_LINELIST,
+    .useDepth = true,
+    .vertPitch = sizeof(LineVertex),
+    .vertLayout = {
+      {SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3     , offsetof(Renderer::LineVertex, pos)},
+      {SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, offsetof(Renderer::LineVertex, color)},
     }
   });
 }
@@ -82,7 +94,7 @@ void Renderer::Scene::draw()
   if (ctx.project)
   {
     for (const auto &passCb : renderPasses) {
-      passCb.second(command_buffer, pipelineN64->getPipeline());
+      passCb.second(command_buffer, *this);
     }
   }
 

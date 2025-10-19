@@ -33,7 +33,7 @@ namespace Editor
       Renderer::Object obj{};
       Renderer::Object obj2{};
 
-      void onRenderPass(SDL_GPUCommandBuffer* cmdBuff, SDL_GPUGraphicsPipeline* pipeline);
+      void onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene);
       void onCopyPass(SDL_GPUCommandBuffer* cmdBuff, SDL_GPUCopyPass *copyPass);
 
     public:

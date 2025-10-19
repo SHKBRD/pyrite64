@@ -16,4 +16,10 @@ namespace Renderer
     /* 0x08 */ glm::u8vec4 color{};   // RGBA8 color
     /* 0x0C */ glm::i16vec2 uv{};  // 10.6 fixed point (pixel coords)
   };
+
+  struct LineVertex
+  {
+    glm::vec3 pos{};
+    glm::u8vec4 color{};
+  };
 }
