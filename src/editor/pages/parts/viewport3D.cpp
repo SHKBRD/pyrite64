@@ -30,16 +30,12 @@ Editor::Viewport3D::Viewport3D()
     onCopyPass(cmdBuff, copyPass);
   });
 
-  mesh = std::make_shared<Renderer::Mesh>();
-  mesh->vertices.clear();
-
   auto meshAsset = ctx.project->getAssets().getByName("model.glb");
   meshAsset->mesh3D->recreate(*ctx.scene);
 
   auto meshAssetB = ctx.project->getAssets().getByName("box.glb");
   meshAssetB->mesh3D->recreate(*ctx.scene);
 
-  mesh->recreate(*ctx.scene);
   obj.setMesh(meshAsset->mesh3D);
   obj2.setMesh(meshAssetB->mesh3D);
 
@@ -82,6 +78,8 @@ void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::S
     }
     //child.draw(renderPass3D, cmdBuff);
   }
+
+  renderScene.getPipeline("lines").bind(renderPass3D);
 
   SDL_EndGPURenderPass(renderPass3D);
 }

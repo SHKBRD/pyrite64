@@ -28,6 +28,10 @@ namespace Renderer
 
       void resize(uint32_t sizeVert, uint32_t sizeIndex);
 
+      void setData(char* verts, uint32_t vertsSize,
+        const std::vector<uint16_t> &indices
+      );
+
     public:
       VertBuffer(SDL_GPUDevice* device);
       ~VertBuffer();
@@ -35,7 +39,24 @@ namespace Renderer
       void setData(
         const std::vector<Vertex> &vertices,
         const std::vector<uint16_t> &indices
-      );
+      ) {
+        setData(
+          (char*)vertices.data(),
+          static_cast<uint32_t>(vertices.size() * sizeof(Vertex)),
+          indices
+        );
+      }
+
+      void setData(
+        const std::vector<LineVertex> &vertices,
+        const std::vector<uint16_t> &indices
+      ) {
+        setData(
+          (char*)vertices.data(),
+          static_cast<uint32_t>(vertices.size() * sizeof(LineVertex)),
+          indices
+        );
+      }
 
       void upload(SDL_GPUCopyPass& pass);
 

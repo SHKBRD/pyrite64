@@ -49,22 +49,19 @@ void Renderer::VertBuffer::resize(uint32_t sizeVert, uint32_t sizeIndex) {
   assert(bufferIdxTrans != nullptr);
 }
 
-void Renderer::VertBuffer::setData(
-  const std::vector<Vertex>&vertices,
-  const std::vector<uint16_t> &indices
-) {
+void Renderer::VertBuffer::setData(char* verts, uint32_t vertsSize, const std::vector<uint16_t>&indices)
+{
   currIdxByteSize = indices.size() * sizeof(uint16_t);
 
-  auto newByteSize = vertices.size() * sizeof(Vertex);
-  if (newByteSize != currVertByteSize) {
-    resize(newByteSize, currIdxByteSize);
+  if (vertsSize != currVertByteSize) {
+    resize(vertsSize, currIdxByteSize);
   }
-  currVertByteSize = newByteSize;
+  currVertByteSize = vertsSize;
 
 // @TODO: store vert/indices in one single buffer
 
   auto data = (Vertex*)SDL_MapGPUTransferBuffer(gpuDevice, bufferTrans, false);
-  SDL_memcpy(data, vertices.data(), currVertByteSize);
+  SDL_memcpy(data, verts, currVertByteSize);
   SDL_UnmapGPUTransferBuffer(gpuDevice, bufferTrans);
 
   data = (Vertex*)SDL_MapGPUTransferBuffer(gpuDevice, bufferIdxTrans, false);

@@ -8,9 +8,14 @@
 
 void Renderer::Mesh::recreate(Renderer::Scene &scene) {
   delete vertBuff;
-  if (vertices.empty())return;
+  if (indices.empty())return;
+
   vertBuff = new VertBuffer(ctx.gpu);
-  vertBuff->setData(vertices, indices);
+  if (!vertLines.empty()) {
+    vertBuff->setData(vertLines, indices);
+  } else {
+    vertBuff->setData(vertices, indices);
+  }
 
   scene.addOneTimeCopyPass([this](SDL_GPUCommandBuffer* cmdBuff, SDL_GPUCopyPass *copyPass){
     vertBuff->upload(*copyPass);

@@ -21,6 +21,7 @@ namespace Renderer
 
     public:
       std::vector<Renderer::Vertex> vertices{};
+      std::vector<Renderer::LineVertex> vertLines{};
       std::vector<uint16_t> indices{};
 
       void recreate(Renderer::Scene &scene);

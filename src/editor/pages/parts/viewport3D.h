@@ -27,9 +27,6 @@ namespace Editor
       glm::vec2 mousePos{};
       glm::vec2 mousePosStart{};
 
-      // TEST:
-      std::shared_ptr<Renderer::Mesh> mesh{};
-
       Renderer::Object obj{};
       Renderer::Object obj2{};
 
