@@ -31,6 +31,9 @@ Renderer::Framebuffer::Framebuffer()
 }
 
 Renderer::Framebuffer::~Framebuffer() {
+  if (transBufferRead) {
+    SDL_ReleaseGPUTransferBuffer(ctx.gpu, transBufferRead);
+  }
   if(gpuTex) {
     SDL_ReleaseGPUTexture(ctx.gpu, gpuTex);
   }
@@ -59,3 +62,58 @@ void Renderer::Framebuffer::resize(uint32_t width, uint32_t height)
   targetInfo.texture = gpuTex;
   depthTargetInfo.texture = gpuTexDepth;
 }
+
+glm::u8vec4 Renderer::Framebuffer::readColor(uint32_t x, uint32_t y)
+{
+  if (x >= texInfo.width || y >= texInfo.height) {
+    return {0,0,0,0};
+  }
+
+  SDL_GPUCommandBuffer* cmdBuff = SDL_AcquireGPUCommandBuffer(ctx.gpu);
+  uint32_t w = 1;
+  uint32_t h = 1;
+
+  if (!transBufferRead) {
+    SDL_GPUTransferBufferCreateInfo tbci{};
+    tbci.size = (Uint32)32;
+    tbci.usage = SDL_GPU_TRANSFERBUFFERUSAGE_DOWNLOAD;
+    transBufferRead = SDL_CreateGPUTransferBuffer(ctx.gpu, &tbci);
+  }
+
+  SDL_GPUCopyPass *pass = SDL_BeginGPUCopyPass(cmdBuff);
+
+  glm::u8vec4 color{0,0,0,0};
+  SDL_GPUTextureRegion src{};
+  src.texture = getTexture();
+  src.x = x;
+  src.y = y;
+  src.w = w;
+  src.h = h;
+  src.d = 1;
+
+  SDL_GPUTextureTransferInfo dst{};
+  dst.transfer_buffer = transBufferRead;
+  dst.rows_per_layer = w;
+  dst.pixels_per_row = h;
+
+  SDL_DownloadFromGPUTexture(pass, &src, &dst);
+
+  SDL_EndGPUCopyPass(pass);
+
+  SDL_GPUFence *fence = SDL_SubmitGPUCommandBufferAndAcquireFence(cmdBuff);
+  SDL_WaitForGPUFences(ctx.gpu, true, &fence, 1);
+  SDL_ReleaseGPUFence(ctx.gpu, fence);
+  //auto buff = SDL_AcquireGPUCommandBuffer(ctx.gpu);
+
+  auto *mapped_tbuf = (uint8_t*)SDL_MapGPUTransferBuffer(ctx.gpu, transBufferRead, false);
+  glm::u8vec4 res{};
+  res.r = mapped_tbuf[0];
+  res.g = mapped_tbuf[1];
+  res.b = mapped_tbuf[2];
+  res.a = mapped_tbuf[3];
+  printf("Pixel: %d %d %d %d\n", mapped_tbuf[0], mapped_tbuf[1], mapped_tbuf[2], mapped_tbuf[3]);
+
+  SDL_UnmapGPUTransferBuffer(ctx.gpu, transBufferRead);
+  return res;
+}
+

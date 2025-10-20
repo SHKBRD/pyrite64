@@ -29,6 +29,9 @@ Editor::Viewport3D::Viewport3D()
   ctx.scene->addCopyPass(passId, [this](SDL_GPUCommandBuffer* cmdBuff, SDL_GPUCopyPass *copyPass) {
     onCopyPass(cmdBuff, copyPass);
   });
+  ctx.scene->addPostRenderCallback(passId, [this](Renderer::Scene& renderScene) {
+    onPostRender(renderScene);
+  });
 
   auto meshAsset = ctx.project->getAssets().getByName("model.glb");
   meshAsset->mesh3D->recreate(*ctx.scene);
@@ -55,6 +58,7 @@ Editor::Viewport3D::Viewport3D()
 Editor::Viewport3D::~Viewport3D() {
   ctx.scene->removeRenderPass(passId);
   ctx.scene->removeCopyPass(passId);
+  ctx.scene->removePostRenderCallback(passId);
 }
 
 void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene)
@@ -97,6 +101,13 @@ void Editor::Viewport3D::onCopyPass(SDL_GPUCommandBuffer* cmdBuff, SDL_GPUCopyPa
   //vertBuff->upload(*copyPass);
 }
 
+void Editor::Viewport3D::onPostRender(Renderer::Scene &renderScene) {
+  if (needsSample) {
+    fb.readColor(mousePosClick.x, mousePosClick.y);
+    needsSample = false;
+  }
+}
+
 void Editor::Viewport3D::draw() {
   camera.update();
   fb.setClearColor(ctx.project->getScenes().getLoadedScene()->conf.clearColor);
@@ -125,6 +136,11 @@ void Editor::Viewport3D::draw() {
 
   bool newMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Middle) || ImGui::IsMouseDown(ImGuiMouseButton_Right);
   bool isShiftDown = ImGui::GetIO().KeyShift;
+
+  if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    needsSample = true;
+    mousePosClick = mousePos;
+  }
 
   if (ImGui::GetIO().KeysData[ImGuiKey_W-ImGuiKey_NamedKey_BEGIN].Down) {
     camera.pos += camera.rot * glm::vec3(0,0,-moveSpeed);

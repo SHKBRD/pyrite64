@@ -15,12 +15,14 @@ namespace Renderer
 
   using CbRenderPass = std::function<void(SDL_GPUCommandBuffer*, Scene&)>;
   using CbCopyPass = std::function<void(SDL_GPUCommandBuffer*, SDL_GPUCopyPass*)>;
+  using CbPostRender = std::function<void(Scene&)>;
 
   class Scene
   {
     private:
       std::unordered_map<uint32_t, CbRenderPass> renderPasses{};
       std::unordered_map<uint32_t, CbCopyPass> copyPasses{};
+      std::unordered_map<uint32_t, CbPostRender> postRenderCallback{};
       std::vector<CbCopyPass> copyPassesOneTime{};
 
       std::unique_ptr<Shader> shaderN64{};
@@ -41,6 +43,9 @@ namespace Renderer
 
       void addCopyPass(uint32_t id, const CbCopyPass& pass) { copyPasses[id] = pass; }
       void removeCopyPass(uint32_t id) { copyPasses.erase(id); }
+
+      void addPostRenderCallback(uint32_t id, const CbPostRender& callback) { postRenderCallback[id] = callback; }
+      void removePostRenderCallback(uint32_t id) { postRenderCallback.erase(id); }
 
       void addOneTimeCopyPass(const CbCopyPass& pass) { copyPassesOneTime.push_back(pass); }
 

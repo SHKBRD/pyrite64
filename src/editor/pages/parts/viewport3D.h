@@ -23,9 +23,11 @@ namespace Editor
 
       bool isMouseHover{false};
       bool isMouseDown{false};
+      bool needsSample{false};
 
       glm::vec2 mousePos{};
       glm::vec2 mousePosStart{};
+      glm::vec2 mousePosClick{};
 
       std::shared_ptr<Renderer::Mesh> meshGrid{};
       Renderer::Object objGrid{};
@@ -35,6 +37,7 @@ namespace Editor
 
       void onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene);
       void onCopyPass(SDL_GPUCommandBuffer* cmdBuff, SDL_GPUCopyPass *copyPass);
+      void onPostRender(Renderer::Scene& renderScene);
 
     public:
       Viewport3D();

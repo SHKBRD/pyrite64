@@ -104,4 +104,11 @@ void Renderer::Scene::draw()
   SDL_EndGPURenderPass(renderPass2D);
   // Submit the command buffer
   SDL_SubmitGPUCommandBuffer(command_buffer);
+
+  if (ctx.project)
+  {
+    for (const auto &cb : postRenderCallback) {
+      cb.second(*this);
+    }
+  }
 }

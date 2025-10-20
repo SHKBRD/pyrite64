@@ -6,6 +6,7 @@
 #include <SDL3/SDL.h>
 
 #include "../utils/color.h"
+#include "glm/vec4.hpp"
 
 namespace Renderer
 {
@@ -17,6 +18,8 @@ namespace Renderer
       SDL_GPUTexture* gpuTexDepth{nullptr};
       SDL_GPUColorTargetInfo targetInfo{};
       SDL_GPUDepthStencilTargetInfo depthTargetInfo{};
+
+      SDL_GPUTransferBuffer *transBufferRead{nullptr};
 
     public:
       Framebuffer();
@@ -34,5 +37,7 @@ namespace Renderer
       [[nodiscard]] const SDL_GPUColorTargetInfo& getTargetInfo() const { return targetInfo; }
       [[nodiscard]] const SDL_GPUDepthStencilTargetInfo& getDepthTargetInfo() const { return depthTargetInfo; }
       [[nodiscard]] SDL_GPUTexture* getTexture() const { return gpuTex; }
+
+      glm::u8vec4 readColor(uint32_t x, uint32_t y);
   };
 }
