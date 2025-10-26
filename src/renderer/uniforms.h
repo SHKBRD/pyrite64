@@ -15,7 +15,7 @@ namespace Renderer
 
   struct UniformN64Material
   {
-    glm::ivec4 blender[2];
+    glm::i32vec4 blender[2];
 
     //Tile settings: xy = TEX0, zw = TEX1
     glm::vec4 mask; // clamped if < 0, mask = abs(mask)
@@ -24,10 +24,10 @@ namespace Renderer
     glm::vec4 high; // if negative, mirrored, high = abs(high)
 
     // color-combiner
-    glm::ivec4 cc0Color;
-    glm::ivec4 cc0Alpha;
-    glm::ivec4 cc1Color;
-    glm::ivec4 cc1Alpha;
+    glm::i32vec4 cc0Color;
+    glm::i32vec4 cc0Alpha;
+    glm::i32vec4 cc1Color;
+    glm::i32vec4 cc1Alpha;
 
     // "vec4 modes" in shader:
     uint32_t geoMode;

@@ -67,3 +67,9 @@ ivec4 wrappedMirror(ivec4 texSize, ivec4 uv)
   uv.yw = texSize.yw - uv.yw; // invert Y back
   return uv;
 }
+
+#define GEO_MODE     material.modes.x
+#define OTHER_MODE_L material.modes.y
+#define OTHER_MODE_H material.modes.z
+#define DRAW_FLAGS   material.modes.w
+#define ALPHA_CLIP   material.lightDir[0].w

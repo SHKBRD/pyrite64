@@ -151,9 +151,11 @@
 #define DRAW_FLAG_TEX0_3BIT    (1 << 7)
 #define DRAW_FLAG_TEX1_3BIT    (1 << 8)
 
+/*
 struct TileConf {
   vec2 mask;
   vec2 shift;
   vec2 low;
   vec2 high;
 };
+*/

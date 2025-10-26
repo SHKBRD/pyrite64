@@ -18,8 +18,11 @@ void Renderer::Object::draw(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmdBu
     transformDirty = false;
   }
 
-  SDL_PushGPUVertexUniformData(cmdBuff, 1, &uniform, sizeof(uniform));
-
-  if(mesh)mesh->draw(pass);
-  if(n64Mesh)n64Mesh->draw(pass, uniform);
+  if(mesh) {
+    SDL_PushGPUVertexUniformData(cmdBuff, 1, &uniform, sizeof(uniform));
+    mesh->draw(pass);
+  }
+  if(n64Mesh) {
+    n64Mesh->draw(pass, cmdBuff, uniform);
+  }
 }

@@ -3,6 +3,8 @@
 * @license MIT
 */
 #include "n64Material.h"
+#include "../../shader/defines.h"
+#include "ccMapping.h"
 
 namespace
 {
@@ -22,6 +24,16 @@ void Renderer::N64Material::convert(N64Mesh::MeshPart &part, const Material &t3d
   part.material.cc1Color = { getBits(cc, 37, 40), getBits(cc, 24, 27), getBits(cc, 32, 36), getBits(cc, 6, 8)   };
   part.material.cc1Alpha = { getBits(cc, 21, 23), getBits(cc, 3, 5),   getBits(cc, 18, 20), getBits(cc, 0, 2)   };
 
+  for (int i=0; i<4; ++i) {
+    part.material.cc0Color[i] = CC_MAP_COLOR[i][part.material.cc0Color[i]];
+    part.material.cc1Color[i] = CC_MAP_COLOR[i][part.material.cc1Color[i]];
+
+    part.material.cc0Alpha[i] = CC_MAP_ALPHA[i][part.material.cc0Alpha[i]];
+    part.material.cc1Alpha[i] = CC_MAP_ALPHA[i][part.material.cc1Alpha[i]];
+
+    // @TODO: tex0 in 2-cycle mode
+  }
+
   part.material.colPrim = {
     t3dMat.primColor[0] / 255.0f,
     t3dMat.primColor[1] / 255.0f,
@@ -34,6 +46,7 @@ void Renderer::N64Material::convert(N64Mesh::MeshPart &part, const Material &t3d
     t3dMat.envColor[2] / 255.0f,
     t3dMat.envColor[3] / 255.0f,
   };
+
   part.material.mask = {
     texA.s.mask, texA.t.mask,
     texB.s.mask, texB.t.mask,
@@ -50,6 +63,47 @@ void Renderer::N64Material::convert(N64Mesh::MeshPart &part, const Material &t3d
     texA.s.high, texA.t.high,
     texB.s.high, texB.t.high,
   };
+
+  part.material.mask = {
+    (1 << texA.s.mask),
+    (1 << texA.t.mask),
+    (1 << texB.s.mask),
+    (1 << texB.t.mask),
+  };
+
+  part.material.shift = {
+    1.0f / (float)(1 << texA.s.shift),
+    1.0f / (float)(1 << texA.t.shift),
+    1.0f / (float)(1 << texB.s.shift),
+    1.0f / (float)(1 << texB.t.shift),
+  };
+
+
+  /*
+ # quantize the low/high values into 0.25 pixel increments
+ conf[8:] = np.round(conf[8:] * 4) / 4
+
+ # if clamp is on, negate the mask value
+ if t0.S.clamp: conf[0] = -conf[0]
+ if t0.T.clamp: conf[1] = -conf[1]
+ if t1.S.clamp: conf[2] = -conf[2]
+ if t1.T.clamp: conf[3] = -conf[3]
+
+ # if mirror is on, negate the high value
+ if t0.S.mirror: conf[12] = -conf[12]
+ if t0.T.mirror: conf[13] = -conf[13]
+ if t1.S.mirror: conf[14] = -conf[14]
+ if t1.T.mirror: conf[15] = -conf[15]
+  */
+  if (texA.s.clamp) part.material.mask[0] = -part.material.mask[0];
+  if (texA.t.clamp) part.material.mask[1] = -part.material.mask[1];
+  if (texB.s.clamp) part.material.mask[2] = -part.material.mask[2];
+  if (texB.t.clamp) part.material.mask[3] = -part.material.mask[3];
+
+  if (texA.s.mirror) part.material.high[0] = -part.material.high[0];
+  if (texA.t.mirror) part.material.high[1] = -part.material.high[1];
+  if (texB.s.mirror) part.material.high[2] = -part.material.high[2];
+  if (texB.t.mirror) part.material.high[3] = -part.material.high[3];
 
   part.material.geoMode = t3dMat.drawFlags;
   part.material.otherModeH = t3dMat.otherModeValue >> 32;

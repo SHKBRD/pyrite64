@@ -83,11 +83,15 @@ void Renderer::N64Mesh::recreate(Renderer::Scene &scene) {
   mesh.recreate(scene);
 }
 
-void Renderer::N64Mesh::draw(SDL_GPURenderPass* pass, UniformsObject &uniforms)
+void Renderer::N64Mesh::draw(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer *cmdBuff, UniformsObject &uniforms)
 {
   for (auto &part : parts) {
     uniforms.mat = part.material;
     SDL_BindGPUFragmentSamplers(pass, 0, part.texBindings, 2);
+    //SDL_BindGPUVertexSamplers(pass, 0, part.texBindings, 2); // needed?
+
+    SDL_PushGPUVertexUniformData(cmdBuff, 1, &uniforms, sizeof(uniforms));
+    SDL_PushGPUFragmentUniformData(cmdBuff, 0, &uniforms, sizeof(uniforms));
 
     mesh.draw(pass, part.indicesOffset, part.indicesCount);
   }

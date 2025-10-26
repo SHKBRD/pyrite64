@@ -154,6 +154,7 @@ add_executable(p64editor src/main.cpp
         src/renderer/n64Mesh.cpp
         src/renderer/n64/n64Material.h
         src/renderer/n64/n64Material.cpp
+        src/renderer/n64/ccMapping.h
 )
 
 target_include_directories(p64editor PRIVATE
