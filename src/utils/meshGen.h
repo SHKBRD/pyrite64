@@ -20,4 +20,10 @@ namespace Utils::Mesh
     const glm::vec3 &pos, const glm::vec3 &halfExtend,
     const glm::u8vec4 &color = {0xFF,0xFF,0xFF,0xFF}
   );
+  void addLine(
+    Renderer::Mesh &mesh,
+    const glm::vec3 &start,
+    const glm::vec3 &end,
+    const glm::u8vec4 &color = {0xFF,0xFF,0xFF,0xFF}
+  );
 }

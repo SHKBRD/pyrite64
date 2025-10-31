@@ -110,3 +110,14 @@ void Utils::Mesh::addLineBox(
   }
 }
 
+void Utils::Mesh::addLine(Renderer::Mesh &mesh, const glm::vec3 &start, const glm::vec3 &end, const glm::u8vec4 &color)
+{
+  uint16_t startIdx = mesh.vertLines.size();
+
+  mesh.vertLines.push_back({start, color});
+  mesh.vertLines.push_back({end, color});
+
+  mesh.indices.push_back(startIdx + 0);
+  mesh.indices.push_back(startIdx + 1);
+}
+
