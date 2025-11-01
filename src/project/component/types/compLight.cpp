@@ -113,13 +113,18 @@ namespace Project::Component::Light
     constexpr float LINE_LEN = 0.7f;
     glm::u8vec4 col = data.color * 255.0f;
 
-    Utils::Mesh::addLineBox(*vp.getLines(), obj.pos, {BOX_SIZE, BOX_SIZE, BOX_SIZE}, col);
+    bool isSelected = ctx.selObjectUUID == obj.uuid;
 
-    if(data.type == LIGHT_TYPE_DIRECTIONAL)
+    if(isSelected)
     {
-      glm::vec3 dir = rotToDir(obj);
-      Utils::Mesh::addLine(*vp.getLines(), obj.pos, obj.pos + (dir * -LINE_LEN), col);
+      Utils::Mesh::addLineBox(*vp.getLines(), obj.pos, {BOX_SIZE, BOX_SIZE, BOX_SIZE}, col);
+      if(data.type == LIGHT_TYPE_DIRECTIONAL)
+      {
+        glm::vec3 dir = rotToDir(obj);
+        Utils::Mesh::addLine(*vp.getLines(), obj.pos, obj.pos + (dir * -LINE_LEN), col);
+      }
     }
 
+    Utils::Mesh::addSprite(*vp.getSprites(), obj.pos, obj.uuid, data.type, col);
   }
 }

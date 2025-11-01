@@ -8,6 +8,8 @@
 
 #include "SDL3_image/SDL_image.h"
 
+extern SDL_GPUSampler *texSamplerRepeat;
+
 Renderer::Texture::Texture(SDL_GPUDevice* device, const std::string &imgPath, int rasterWidth, int rasterHeight)
   : gpuDevice(device)
 {
@@ -77,8 +79,16 @@ Renderer::Texture::Texture(SDL_GPUDevice* device, const std::string &imgPath, in
   SDL_ReleaseGPUTransferBuffer(device, transferbuffer);
 
   SDL_DestroySurface(img);
+
+  texBinding.texture = texture;
+  texBinding.sampler = texSamplerRepeat;
 }
 
 Renderer::Texture::~Texture() {
  SDL_ReleaseGPUTexture(gpuDevice, texture);
+}
+
+void Renderer::Texture::bind(SDL_GPURenderPass* pass)
+{
+  SDL_BindGPUFragmentSamplers(pass, 0, &texBinding, 1);
 }

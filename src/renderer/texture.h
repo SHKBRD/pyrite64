@@ -16,6 +16,8 @@ namespace Renderer
       SDL_GPUDevice *gpuDevice{nullptr};
       SDL_GPUTexture* texture{nullptr};
 
+      SDL_GPUTextureSamplerBinding texBinding{};
+
       int width{0};
       int height{0};
 
@@ -30,5 +32,7 @@ namespace Renderer
       ImVec2 getSize(float scale = 1.0f) const {
         return {(float)width * scale, (float)height * scale};
       };
+
+      void bind(SDL_GPURenderPass* pass);
   };
 }

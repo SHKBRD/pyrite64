@@ -100,10 +100,19 @@ bool ConnectedToggleButton(const char* text, bool active, bool first, bool last,
 
     return pressed;
 }
+
+  std::shared_ptr<Renderer::Texture> sprites{};
+  uint32_t spritesRefCount{0};
+
 }
 
 Editor::Viewport3D::Viewport3D()
 {
+  if(spritesRefCount == 0) {
+    sprites = std::make_shared<Renderer::Texture>(ctx.gpu, "data/img/icons/sprites.png");
+  }
+  ++spritesRefCount;
+
   passId = ++nextPassId;
   ctx.scene->addRenderPass(passId, [this](SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene) {
     onRenderPass(cmdBuff, renderScene);
@@ -123,6 +132,9 @@ Editor::Viewport3D::Viewport3D()
   meshLines = std::make_shared<Renderer::Mesh>();
   objLines.setMesh(meshLines);
 
+  meshSprites = std::make_shared<Renderer::Mesh>();
+  objSprites.setMesh(meshSprites);
+
   auto &gizStyle = ImViewGuizmo::GetStyle();
   gizStyle.scale = 0.5f;
   gizStyle.circleRadius = 19.0f;
@@ -135,12 +147,19 @@ Editor::Viewport3D::~Viewport3D() {
   ctx.scene->removeRenderPass(passId);
   ctx.scene->removeCopyPass(passId);
   ctx.scene->removePostRenderCallback(passId);
+
+  if(--spritesRefCount == 0) {
+    sprites = nullptr;
+  }
 }
 
 void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene)
 {
   meshLines->vertLines.clear();
   meshLines->indices.clear();
+
+  meshSprites->vertLines.clear();
+  meshSprites->indices.clear();
 
   auto scene = ctx.project->getScenes().getLoadedScene();
   if (!scene)return;
@@ -151,6 +170,7 @@ void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::S
   renderScene.getPipeline("n64").bind(renderPass3D);
 
   camera.apply(uniGlobal);
+  uniGlobal.screenSize = glm::vec2{(float)fb.getWidth(), (float)fb.getHeight()};
   SDL_PushGPUVertexUniformData(cmdBuff, 0, &uniGlobal, sizeof(uniGlobal));
   auto &rootObj = scene->getRootObject();
   for(auto& child : rootObj.children)
@@ -166,12 +186,18 @@ void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::S
   }
 
   meshLines->recreate(renderScene);
+  meshSprites->recreate(renderScene);
 
   renderScene.getPipeline("lines").bind(renderPass3D);
   if (showGrid) {
     objGrid.draw(renderPass3D, cmdBuff);
   }
   objLines.draw(renderPass3D, cmdBuff);
+
+  renderScene.getPipeline("sprites").bind(renderPass3D);
+
+  sprites->bind(renderPass3D);
+  objSprites.draw(renderPass3D, cmdBuff);
 
   SDL_EndGPURenderPass(renderPass3D);
 }

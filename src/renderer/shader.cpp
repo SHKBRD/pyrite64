@@ -4,6 +4,8 @@
 */
 #include "shader.h"
 
+#include <cassert>
+
 #include "SDL3/SDL_gpu.h"
 #include "SDL3/SDL_iostream.h"
 
@@ -30,6 +32,7 @@ Renderer::Shader::Shader(SDL_GPUDevice* device, const Config &conf)
   vertexInfo.num_storage_textures = 0;
   vertexInfo.num_uniform_buffers = conf.vertUboCount;
   shaderVert = SDL_CreateGPUShader(device, &vertexInfo);
+  assert(shaderVert != nullptr);
 
   // create the fragment shader
   SDL_GPUShaderCreateInfo fragmentInfo{};

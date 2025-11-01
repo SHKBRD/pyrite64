@@ -37,6 +37,9 @@ namespace Editor
       std::shared_ptr<Renderer::Mesh> meshLines{};
       Renderer::Object objLines{};
 
+      std::shared_ptr<Renderer::Mesh> meshSprites{};
+      Renderer::Object objSprites{};
+
       bool showGrid{true};
 
       void onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::Scene& renderScene);
@@ -49,6 +52,10 @@ namespace Editor
 
       std::shared_ptr<Renderer::Mesh> getLines() {
         return meshLines;
+      }
+
+      std::shared_ptr<Renderer::Mesh> getSprites() {
+        return meshSprites;
       }
 
       void draw();

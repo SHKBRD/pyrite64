@@ -37,6 +37,9 @@ namespace Renderer
 
       void resize(uint32_t width, uint32_t height);
 
+      uint32_t getWidth() const { return texInfo.width; }
+      uint32_t getHeight() const { return texInfo.height; }
+
       [[nodiscard]] const SDL_GPUColorTargetInfo *getTargetInfo() const { return targetInfo.data(); }
       [[nodiscard]] uint32_t getTargetInfoCount() const { return targetInfo.size(); }
 

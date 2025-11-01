@@ -26,4 +26,12 @@ namespace Utils::Mesh
     const glm::vec3 &end,
     const glm::u8vec4 &color = {0xFF,0xFF,0xFF,0xFF}
   );
+
+  void addSprite(
+    Renderer::Mesh &mesh,
+    const glm::vec3 &pos,
+    uint32_t objectId,
+    uint8_t spriteIdx,
+    const glm::u8vec4 &color = {0xFF,0xFF,0xFF,0xFF}
+  );
 }

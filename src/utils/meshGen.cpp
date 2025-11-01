@@ -58,20 +58,20 @@ void Utils::Mesh::generateGrid(Renderer::Mesh&mesh, int size) {
 
 
   for (int z=-size; z<=size; z++) {
-    mesh.vertLines.push_back({{ -size, 0.0f, (float)z }, z == 0 ? colX : col});
-    mesh.vertLines.push_back({{  size, 0.0f, (float)z }, z == 0 ? colX : col});
+    mesh.vertLines.push_back({{ -size, 0.0f, (float)z }, 0, z == 0 ? colX : col});
+    mesh.vertLines.push_back({{  size, 0.0f, (float)z }, 0, z == 0 ? colX : col});
     mesh.indices.push_back(mesh.vertLines.size() - 2);
     mesh.indices.push_back(mesh.vertLines.size() - 1);
   }
   for (int x=-size; x<=size; x++) {
-    mesh.vertLines.push_back({{ (float)x, 0.0f, -size }, x == 0 ? colZ : col});
-    mesh.vertLines.push_back({{ (float)x, 0.0f,  size }, x == 0 ? colZ : col});
+    mesh.vertLines.push_back({{ (float)x, 0.0f, -size }, 0, x == 0 ? colZ : col});
+    mesh.vertLines.push_back({{ (float)x, 0.0f,  size }, 0, x == 0 ? colZ : col});
     mesh.indices.push_back(mesh.vertLines.size() - 2);
     mesh.indices.push_back(mesh.vertLines.size() - 1);
   }
 
-  mesh.vertLines.push_back({{ 0.0f, -size, 0.0f }, colY});
-  mesh.vertLines.push_back({{ 0.0f,  size, 0.0f }, colY});
+  mesh.vertLines.push_back({{ 0.0f, -size, 0.0f }, 0, colY});
+  mesh.vertLines.push_back({{ 0.0f,  size, 0.0f }, 0, colY});
   mesh.indices.push_back(mesh.vertLines.size() - 2);
   mesh.indices.push_back(mesh.vertLines.size() - 1);
 }
@@ -91,14 +91,14 @@ void Utils::Mesh::addLineBox(
   glm::vec3 v6 = pos + glm::vec3( halfExtend.x,  halfExtend.y,  halfExtend.z);
   glm::vec3 v7 = pos + glm::vec3(-halfExtend.x,  halfExtend.y,  halfExtend.z);
 
-  mesh.vertLines.push_back({v0, color});
-  mesh.vertLines.push_back({v1, color});
-  mesh.vertLines.push_back({v2, color});
-  mesh.vertLines.push_back({v3, color});
-  mesh.vertLines.push_back({v4, color});
-  mesh.vertLines.push_back({v5, color});
-  mesh.vertLines.push_back({v6, color});
-  mesh.vertLines.push_back({v7, color});
+  mesh.vertLines.push_back({v0, 0, color});
+  mesh.vertLines.push_back({v1, 0, color});
+  mesh.vertLines.push_back({v2, 0, color});
+  mesh.vertLines.push_back({v3, 0, color});
+  mesh.vertLines.push_back({v4, 0, color});
+  mesh.vertLines.push_back({v5, 0, color});
+  mesh.vertLines.push_back({v6, 0, color});
+  mesh.vertLines.push_back({v7, 0, color});
 
   constexpr uint16_t INDICES[] = {
     0,1, 1,2, 2,3, 3,0,
@@ -114,10 +114,28 @@ void Utils::Mesh::addLine(Renderer::Mesh &mesh, const glm::vec3 &start, const gl
 {
   uint16_t startIdx = mesh.vertLines.size();
 
-  mesh.vertLines.push_back({start, color});
-  mesh.vertLines.push_back({end, color});
+  mesh.vertLines.push_back({start, 0, color});
+  mesh.vertLines.push_back({end, 0, color});
 
   mesh.indices.push_back(startIdx + 0);
   mesh.indices.push_back(startIdx + 1);
+}
+
+void Utils::Mesh::addSprite(Renderer::Mesh &mesh, const glm::vec3 &pos, uint32_t objectId, uint8_t spriteIdx, const glm::u8vec4 &color)
+{
+  glm::u8vec4 col{color.r, color.g, color.b, spriteIdx};
+  uint16_t idx = mesh.vertLines.size();
+
+  mesh.vertLines.push_back({.pos = pos, .objectId = objectId, .color = col});
+  mesh.vertLines.push_back({.pos = pos, .objectId = objectId, .color = col});
+  mesh.vertLines.push_back({.pos = pos, .objectId = objectId, .color = col});
+  mesh.vertLines.push_back({.pos = pos, .objectId = objectId, .color = col});
+
+  mesh.indices.push_back(idx+0);
+  mesh.indices.push_back(idx+1);
+  mesh.indices.push_back(idx+2);
+  mesh.indices.push_back(idx+2);
+  mesh.indices.push_back(idx+3);
+  mesh.indices.push_back(idx+0);
 }
 

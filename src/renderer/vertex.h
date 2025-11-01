@@ -20,6 +20,7 @@ namespace Renderer
   struct LineVertex
   {
     glm::vec3 pos{};
+    uint32_t objectId{};
     glm::u8vec4 color{};
   };
 }

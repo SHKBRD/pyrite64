@@ -6,3 +6,6 @@ glslc -fshader-stage=vertex n64.vert.glsl -o ../../data/shader/n64.vert.spv
 
 glslc -fshader-stage=fragment lines.frag.glsl -o ../../data/shader/lines.frag.spv
 glslc -fshader-stage=vertex lines.vert.glsl -o ../../data/shader/lines.vert.spv
+
+glslc -fshader-stage=fragment sprites.frag.glsl -o ../../data/shader/sprites.frag.spv
+glslc -fshader-stage=vertex sprites.vert.glsl -o ../../data/shader/sprites.vert.spv

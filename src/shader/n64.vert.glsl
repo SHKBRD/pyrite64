@@ -20,6 +20,7 @@ layout (location = 6) out flat vec4 cc_shade_flat;
 layout(std140, set = 1, binding = 0) uniform UniformGlobal {
     mat4 projMat;
     mat4 cameraMat;
+    vec2 screenSize;
 };
 
 layout(std140, set = 1, binding = 1) uniform UniformObject {

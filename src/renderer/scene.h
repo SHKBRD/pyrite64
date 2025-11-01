@@ -37,9 +37,11 @@ namespace Renderer
 
       std::unique_ptr<Shader> shaderN64{};
       std::unique_ptr<Shader> shaderLines{};
+      std::unique_ptr<Shader> shaderSprites{};
 
       std::unique_ptr<Pipeline> pipelineN64{};
       std::unique_ptr<Pipeline> pipelineLines{};
+      std::unique_ptr<Pipeline> pipelineSprites{};
 
       std::vector<Light> lights{};
 
@@ -68,6 +70,7 @@ namespace Renderer
       Pipeline& getPipeline(const std::string &name) const {
         if (name == "n64") return *pipelineN64;
         if (name == "lines") return *pipelineLines;
+        if (name == "sprites") return *pipelineSprites;
         throw std::runtime_error("Pipeline not found: " + name);
       }
   };

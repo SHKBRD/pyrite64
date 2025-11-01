@@ -9,14 +9,8 @@
 #include "backends/imgui_impl_sdlgpu3.h"
 #include "../context.h"
 
-#include "./texture.h"
-#include "./vertBuffer.h"
 #include "framebuffer.h"
 #include "shader.h"
-
-namespace
-{
-}
 
 Renderer::Scene::Scene()
 {
@@ -33,6 +27,13 @@ Renderer::Scene::Scene()
     .fragUboCount = 0,
     .vertTexCount = 0,
     .fragTexCount = 0,
+  });
+  shaderSprites = std::make_unique<Shader>(ctx.gpu, Shader::Config{
+    .name = "sprites",
+    .vertUboCount = 2,
+    .fragUboCount = 0,
+    .vertTexCount = 0,
+    .fragTexCount = 1,
   });
 
   pipelineN64 = std::make_unique<Pipeline>(Pipeline::Info{
@@ -56,9 +57,23 @@ Renderer::Scene::Scene()
     .vertPitch = sizeof(LineVertex),
     .vertLayout = {
       {SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3     , offsetof(Renderer::LineVertex, pos)},
+      {SDL_GPU_VERTEXELEMENTFORMAT_UINT       , offsetof(Renderer::LineVertex, objectId)},
       {SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, offsetof(Renderer::LineVertex, color)},
     }
   });
+
+  pipelineSprites = std::make_unique<Pipeline>(Pipeline::Info{
+  .shader = *shaderSprites,
+  .prim = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+  .useDepth = true,
+  .drawsObjID = true,
+  .vertPitch = sizeof(LineVertex),
+  .vertLayout = {
+    {SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3     , offsetof(Renderer::LineVertex, pos)},
+    {SDL_GPU_VERTEXELEMENTFORMAT_UINT       , offsetof(Renderer::LineVertex, objectId)},
+    {SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, offsetof(Renderer::LineVertex, color)},
+  }
+});
 }
 
 Renderer::Scene::~Scene() {
