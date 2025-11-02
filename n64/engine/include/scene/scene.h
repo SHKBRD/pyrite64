@@ -40,6 +40,8 @@ namespace P64
       // @TODO: avoid vector + fragmented alloc
       std::vector<Object*> objects{};
 
+      std::vector<Object*> pendingObjDelete{};
+
       Lighting lighting{};
 
       SceneConf conf{};
@@ -65,6 +67,8 @@ namespace P64
       void removeCamera(Camera *cam) {
         std::erase(cameras, cam);
       }
+
+      void removeObject(Object &obj);
 
       [[nodiscard]] Lighting& getLighting() { return lighting; }
   };

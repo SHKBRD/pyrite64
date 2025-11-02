@@ -1,6 +1,6 @@
 #include "scene/sceneManager.h"
 
-namespace P64::Script::__UUID__
+namespace P64::Script::C54E2E8B498612FE
 {
   struct Data
   {
@@ -13,9 +13,10 @@ namespace P64::Script::__UUID__
 
   void update(Object& obj, Data *data)
   {
-  }
-
-  void draw(Object& obj, Data *data)
-  {
+    auto pressed = joypad_get_buttons_pressed(JOYPAD_PORT_1);
+    if(pressed.z)
+    {
+      SceneManager::getCurrent().removeObject(obj);
+    }
   }
 }

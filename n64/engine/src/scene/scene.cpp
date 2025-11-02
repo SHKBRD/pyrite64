@@ -95,6 +95,20 @@ void P64::Scene::update(float deltaTime) {
     }
   }
 
+  for(auto &obj : pendingObjDelete)
+  {
+    auto compRefs = obj->getCompRefs();
+    for (uint32_t i=0; i<obj->compCount; ++i) {
+      const auto &compDef = COMP_TABLE[compRefs[i].type];
+      char* dataPtr = (char*)obj + compRefs[i].offset;
+      compDef.initDel(*obj, dataPtr, nullptr);
+    }
+    std::erase(objects, obj);
+    obj->~Object();
+    free(obj);
+  }
+  pendingObjDelete.clear();
+
   AudioManager::update();
 
   VI::SwapChain::nextFrame();
@@ -153,4 +167,9 @@ void P64::Scene::draw(float deltaTime)
   rdpq_sync_load();
   rdpq_sync_tile();
   rdpq_sprite_blit(sprite, 16, 16, nullptr);
+}
+
+void P64::Scene::removeObject(Object &obj)
+{
+  pendingObjDelete.push_back(&obj);
 }
