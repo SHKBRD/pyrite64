@@ -81,10 +81,8 @@ void P64::Scene::update(float deltaTime) {
   lighting.reset();
 
   for(auto &cam : cameras) {
-    cam.update(deltaTime);
+    cam->update(deltaTime);
   }
-
-  cameras[0].attach(); // @TODO: hack, remove by making proper lighting manager
 
   for(auto obj : objects)
   {
@@ -125,8 +123,8 @@ void P64::Scene::draw(float deltaTime)
   // 3D Pass, for every active camera
   for(auto &cam : cameras)
   {
-    camMain = &cam;
-    cam.attach();
+    camMain = cam;
+    cam->attach();
 
     lighting.apply();
 

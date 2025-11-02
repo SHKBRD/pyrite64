@@ -21,11 +21,7 @@ namespace P64::Comp
       float far;
     };
 
-    fm_vec3_t dir{};
-    color_t color{};
-    uint8_t type{};
-    uint8_t index{};
-
+    P64::Camera camera{};
 
     static uint32_t getAllocSize(InitData* initData)
     {
@@ -35,13 +31,15 @@ namespace P64::Comp
     static void initDelete(Object& obj, Camera* data, InitData* initData)
     {
       if (initData == nullptr) {
+        SceneManager::getCurrent().removeCamera(&data->camera);
         data->~Camera();
         return;
       }
 
       new(data) Camera();
 
-      auto &cam = SceneManager::getCurrent().addCamera();
+      SceneManager::getCurrent().addCamera(&data->camera);
+      auto &cam = data->camera;
       cam.setPos(obj.pos);
       cam.fov  = initData->fov;
       cam.near = initData->near;

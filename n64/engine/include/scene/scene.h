@@ -29,7 +29,7 @@ namespace P64
   class Scene
   {
     private:
-      std::vector<P64::Camera> cameras{};
+      std::vector<P64::Camera*> cameras{};
       P64::Camera *camMain{nullptr};
 
       surface_t surfFbColor[3]{};
@@ -55,11 +55,15 @@ namespace P64
       void draw(float deltaTime);
 
       [[nodiscard]] uint16_t getId() const { return id; }
-      [[nodiscard]] Camera& getCamera(uint32_t index = 0) { return cameras[index]; }
+      [[nodiscard]] Camera* getCamera(uint32_t index = 0) { return cameras[index]; }
+      [[nodiscard]] Camera& getActiveCamera() { return *camMain; }
 
-      Camera& addCamera() {
-        cameras.push_back({});
-        return cameras.back();
+      void addCamera(Camera *cam) {
+        cameras.push_back(cam);
+      }
+
+      void removeCamera(Camera *cam) {
+        std::erase(cameras, cam);
       }
 
       [[nodiscard]] Lighting& getLighting() { return lighting; }
