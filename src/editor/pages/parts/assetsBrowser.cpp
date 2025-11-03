@@ -28,21 +28,7 @@ namespace
 
 }
 
-Editor::AssetsBrowser::AssetsBrowser()
-  : iconFile{ctx.gpu, "data/img/icons/file.svg", ICON_MAX_SIZE, ICON_MAX_SIZE},
-   iconMesh{ctx.gpu, "data/img/icons/mesh.svg", ICON_MAX_SIZE, ICON_MAX_SIZE},
-   iconMusic{ctx.gpu, "data/img/icons/music.svg", ICON_MAX_SIZE, ICON_MAX_SIZE},
-   iconCodeAdd{ctx.gpu, "data/img/icons/scriptAdd.svg", ICON_MAX_SIZE, ICON_MAX_SIZE},
-   iconCodeCpp{ctx.gpu, "data/img/icons/scriptCpp.svg", ICON_MAX_SIZE, ICON_MAX_SIZE}
-{
-  activeTab = 0;
-}
-
-Editor::AssetsBrowser::~AssetsBrowser() {
-}
-
 void Editor::AssetsBrowser::draw() {
-  auto &assets = ctx.project->getAssets().getEntries();
   auto &scenes = ctx.project->getScenes().getEntries();
 
   const std::array<TabDef, 4> TABS{
@@ -97,16 +83,17 @@ void Editor::AssetsBrowser::draw() {
     {
       checkLineBreak();
 
-      auto icon = ImTextureRef(iconFile.getGPUTex());
+      auto icon = ImTextureRef(nullptr);
+      const char* iconTxt = ICON_MDI_FILE_OUTLINE;
       if (asset.texture) {
         icon = ImTextureRef(asset.texture->getGPUTex());
       } else {
         if (asset.type == FileType::MODEL_3D) {
-          icon = ImTextureRef(iconMesh.getGPUTex());
+          iconTxt = ICON_MDI_CUBE_OUTLINE;
         } else if (asset.type == FileType::AUDIO) {
-          icon = ImTextureRef(iconMusic.getGPUTex());
+          iconTxt = ICON_MDI_MUSIC;
         } else if (asset.type == FileType::CODE) {
-          icon = ImTextureRef(iconCodeCpp.getGPUTex());
+          iconTxt = ICON_MDI_LANGUAGE_CPP;
         }
       }
 
@@ -116,11 +103,22 @@ void Editor::AssetsBrowser::draw() {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.5f,0.5f,0.7f,0.8f});
       }
 
-      if (ImGui::ImageButton(asset.name.c_str(), icon,
-        {imageSize, imageSize}, {0,0}, {1,1}, {0,0,0,0}, {1,1,1,
-          asset.conf.exclude ? 0.25f : 1.0f
-        }
-      )) {
+      bool clicked{false};
+      if(icon._TexID)
+      {
+        clicked = ImGui::ImageButton(asset.name.c_str(), icon,
+          {imageSize, imageSize}, {0,0}, {1,1}, {0,0,0,0},
+          {1,1,1, asset.conf.exclude ? 0.25f : 1.0f}
+        );
+      } else {
+        ImGui::PushFont(nullptr, 32.0f);
+        ImGui::PushID((int)asset.uuid);
+        clicked = ImGui::Button(iconTxt, textBtnSize);
+        ImGui::PopID();
+        ImGui::PopFont();
+      }
+
+      if (clicked) {
         ctx.selAssetUUID = asset.uuid == ctx.selAssetUUID ? 0 : asset.uuid;
       }
 
@@ -146,8 +144,6 @@ void Editor::AssetsBrowser::draw() {
     for (const auto &scene : scenes)
     {
       checkLineBreak();
-
-      auto icon = ImTextureRef(iconFile.getGPUTex());
       int selId = ctx.project->getScenes().getLoadedScene()->getId();
 
       bool isSelected = (selId == scene.id);

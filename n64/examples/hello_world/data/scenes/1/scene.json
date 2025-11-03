@@ -41,7 +41,7 @@
 "name":"Lights (Def)",
 "uuid":251976254,
 "selectable":true,
-"enabled":false,
+"enabled":true,
 "isGroup":true,"pos":[0.0,0.0,0.46682313084602356],"rot":[0.0,0.0,0.0,1.0],"scale":[0.015625,0.015625,0.015625],"components":[],"children":[{"id":6,
 "name":"Ambient",
 "uuid":884036603,
@@ -76,7 +76,7 @@
 "name":"Lights (Night)",
 "uuid":523800555,
 "selectable":true,
-"enabled":true,
+"enabled":false,
 "isGroup":true,"pos":[0.0,0.0,0.0],"rot":[0.0,0.0,0.0,1.0],"scale":[0.015625,0.015625,0.015625],"components":[],"children":[{"id":10,
 "name":"Amb. + Dir",
 "uuid":2481286489,
@@ -108,8 +108,8 @@
 },
 {"id":0,
 "uuid":11094208121761379551,
-"name":"Code","data":{"script":14217352249424089854,"args":{"groupOff":"9",
-"groupOn":"5"}}
+"name":"Code","data":{"script":14217352249424089854,"args":{"groupOff":"5",
+"groupOn":"9"}}
 }],"children":[]},
 {"id":13,
 "name":"Gear",
