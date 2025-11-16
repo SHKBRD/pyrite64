@@ -10,14 +10,16 @@ namespace P64::Comp
 {
   struct Code
   {
-    Script::FuncUpdate funcUpdate{};
-    Script::FuncUpdate funcDraw{};
+    // @TODO: only store used functions
+    Script::FuncObject funcInit{};
+    Script::FuncObject funcUpdate{};
+    Script::FuncObject funcDraw{};
+    Script::FuncObject funcDestroy{};
 
     static uint32_t getAllocSize(uint16_t* initData)
     {
-      auto scriptPtr = Script::getCodeByIndex(initData[0]);
-      assert(scriptPtr.update != nullptr);
-      return sizeof(Code) + scriptPtr.dataSize;
+      auto dataSize = Script::getCodeSizeByIndex(initData[0]);
+      return sizeof(Code) + dataSize;
     }
 
     static void initDelete([[maybe_unused]] Object& obj, Code* data, uint16_t* initData)
@@ -25,13 +27,14 @@ namespace P64::Comp
       if (initData == nullptr)return;
 
       auto scriptPtr = Script::getCodeByIndex(initData[0]);
+      auto dataSize = Script::getCodeSizeByIndex(initData[0]);
       // reserved: initData[1];
 
       data->funcUpdate = scriptPtr.update;
       data->funcDraw = scriptPtr.draw;
 
-      if (scriptPtr.dataSize > 0) {
-        memcpy((char*)data + sizeof(Code), (char*)&initData[2], scriptPtr.dataSize);
+      if (dataSize > 0) {
+        memcpy((char*)data + sizeof(Code), (char*)&initData[2], dataSize);
       }
     }
 

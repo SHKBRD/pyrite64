@@ -12,6 +12,10 @@ __CODE_DECL__
 __CODE_ENTRIES__
   };
 
+  uint16_t codeSizeTable[] = {
+__CODE_SIZE_ENTRIES__
+  };
+
   constinit ScriptEntry codeDummy{};
 
   ScriptEntry& getCodeByIndex(uint32_t idx)
@@ -20,5 +24,13 @@ __CODE_ENTRIES__
       return codeTable[idx];
     }
     return codeDummy;
+  }
+
+  uint16_t getCodeSizeByIndex(uint32_t idx)
+  {
+    if (idx < sizeof(codeTable)/sizeof(codeTable[0])) {
+      return codeSizeTable[idx];
+    }
+    return 0;
   }
 }

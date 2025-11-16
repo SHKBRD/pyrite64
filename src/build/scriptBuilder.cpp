@@ -17,6 +17,7 @@ void Build::buildScripts(Project::Project &project, SceneCtx &sceneCtx)
   auto pathTable = project.getPath() + "/src/p64/scriptTable.cpp";
 
   std::string srcEntries = "";
+  std::string srcSizeEntries = "";
   std::string srcDecl = "";
 
   auto scripts = project.getAssets().getTypeEntries(Project::AssetManager::FileType::CODE);
@@ -24,21 +25,28 @@ void Build::buildScripts(Project::Project &project, SceneCtx &sceneCtx)
   for (auto &script : scripts)
   {
     auto src = Utils::FS::loadTextFile(script.path);
+    bool hasInit = Utils::CPP::hasFunction(src, "void", "init");
     bool hasUpdate = Utils::CPP::hasFunction(src, "void", "update");
     bool hasDraw = Utils::CPP::hasFunction(src, "void", "draw");
+    bool hasDestroy = Utils::CPP::hasFunction(src, "void", "destroy");
     uint32_t dataSize = Utils::CPP::calcStructSize(script.params);
+
+    srcSizeEntries += std::to_string(dataSize) + ",\n";
 
     auto uuidStr = std::format("{:016X}", script.uuid);
 
     srcDecl += "  namespace " + uuidStr + " {\nstruct Data;\n";
+    if(hasInit)srcDecl += "void init(Object& obj, Data *data);\n";
     if(hasUpdate)srcDecl += "void update(Object& obj, Data *data);\n";
     if(hasDraw)srcDecl += "void draw(Object& obj, Data *data);\n";
+    if(hasDestroy)srcDecl += "void destroy(Object& obj, Data *data);\n";
     srcDecl += "}\n";
 
     srcEntries += "{\n";
-    if(hasUpdate)srcEntries += " .update = (FuncUpdate)" + uuidStr + "::update,\n";
-    if(hasDraw)srcEntries += " .draw = (FuncUpdate)" + uuidStr + "::draw,\n";
-    srcEntries += " .dataSize = " + std::to_string(dataSize) + ",\n";
+    if(hasInit)srcEntries += " .init = (FuncObject)" + uuidStr + "::init,\n";
+    if(hasUpdate)srcEntries += " .update = (FuncObject)" + uuidStr + "::update,\n";
+    if(hasDraw)srcEntries += " .draw = (FuncObject)" + uuidStr + "::draw,\n";
+    if(hasDestroy)srcEntries += " .destroy = (FuncObject)" + uuidStr + "::destroy,\n";
     srcEntries += "},\n";
 
     sceneCtx.codeIdxMapUUID[script.uuid] = idx;
@@ -49,6 +57,7 @@ void Build::buildScripts(Project::Project &project, SceneCtx &sceneCtx)
 
   auto src = Utils::FS::loadTextFile("data/scripts/scriptTable.cpp");
   src = Utils::replaceAll(src, "__CODE_ENTRIES__", srcEntries);
+  src = Utils::replaceAll(src, "__CODE_SIZE_ENTRIES__", srcSizeEntries);
   src = Utils::replaceAll(src, "__CODE_DECL__", srcDecl);
 
 

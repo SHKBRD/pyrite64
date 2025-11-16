@@ -9,15 +9,17 @@ namespace P64 { class Object; }
 
 namespace P64::Script
 {
-  typedef void(*FuncUpdate)(Object&, void*);
+  typedef void(*FuncObject)(Object&, void*);
 
   struct ScriptEntry
   {
-    FuncUpdate update;
-    FuncUpdate draw;
-    uint32_t dataSize;
+    FuncObject init;
+    FuncObject update;
+    FuncObject draw;
+    FuncObject destroy;
   };
 
   // Note: generated and implement in the project:
   ScriptEntry &getCodeByIndex(uint32_t idx);
+  uint16_t getCodeSizeByIndex(uint32_t idx);
 }
