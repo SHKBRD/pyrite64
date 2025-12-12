@@ -5,6 +5,7 @@
 #include <libdragon.h>
 
 #include "scene/sceneManager.h"
+#include "vi/swapChain.h"
 
 namespace {
   constinit P64::Scene* currScene{nullptr};
@@ -29,7 +30,7 @@ namespace P64::SceneManager
     currScene = new P64::Scene(sceneId, &currScene);
 
     while(sceneId == nextSceneId) {
-      currScene->update(1.0f / 60.0f);
+      currScene->update(VI::SwapChain::getDeltaTime());
     }
   }
 

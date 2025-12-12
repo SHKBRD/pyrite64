@@ -39,7 +39,7 @@ namespace P64::Comp
       // reserved: initData[1];
     }
 
-    static void update(Object& obj, Model* data) {
+    static void update(Object& obj, Model* data, float deltaTime) {
       auto mat = data->matFP.getNext();
       t3d_mat4fp_from_srt(mat,
         obj.scale,
@@ -48,7 +48,7 @@ namespace P64::Comp
       );
     }
 
-    static void draw([[maybe_unused]] Object& obj, Model* data) {
+    static void draw([[maybe_unused]] Object& obj, Model* data, float deltaTime) {
       t3d_matrix_set(data->matFP.get(), true);
       /*auto it = t3d_model_iter_create(data->model, T3D_CHUNK_TYPE_OBJECT);
       while(t3d_model_iter_next(&it)) {

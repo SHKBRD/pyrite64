@@ -91,7 +91,7 @@ void P64::Scene::update(float deltaTime) {
     for (uint32_t i=0; i<obj->compCount; ++i) {
       const auto &compDef = COMP_TABLE[compRefs[i].type];
       char* dataPtr = (char*)obj + compRefs[i].offset;
-      compDef.update(*obj, dataPtr);
+      compDef.update(*obj, dataPtr, deltaTime);
     }
   }
 
@@ -157,7 +157,7 @@ void P64::Scene::draw([[maybe_unused]] float deltaTime)
       for (uint32_t i=0; i<obj->compCount; ++i) {
         const auto &compDef = COMP_TABLE[compRefs[i].type];
         char* dataPtr = (char*)obj + compRefs[i].offset;
-        compDef.draw(*obj, dataPtr);
+        compDef.draw(*obj, dataPtr, deltaTime);
       }
     }
 

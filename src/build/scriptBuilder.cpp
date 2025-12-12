@@ -37,16 +37,16 @@ void Build::buildScripts(Project::Project &project, SceneCtx &sceneCtx)
     srcDecl += "  namespace " + uuidStr + " {\nstruct Data;\n";
     srcDecl += " extern uint16_t DATA_SIZE;\n";
     if(hasInit)srcDecl += "void init(Object& obj, Data *data);\n";
-    if(hasUpdate)srcDecl += "void update(Object& obj, Data *data);\n";
-    if(hasDraw)srcDecl += "void draw(Object& obj, Data *data);\n";
+    if(hasUpdate)srcDecl += "void update(Object& obj, Data *data, float deltaTime);\n";
+    if(hasDraw)srcDecl += "void draw(Object& obj, Data *data, float deltaTime);\n";
     if(hasDestroy)srcDecl += "void destroy(Object& obj, Data *data);\n";
     srcDecl += "}\n";
 
     srcEntries += "{\n";
-    if(hasInit)srcEntries += " .init = (FuncObject)" + uuidStr + "::init,\n";
-    if(hasUpdate)srcEntries += " .update = (FuncObject)" + uuidStr + "::update,\n";
-    if(hasDraw)srcEntries += " .draw = (FuncObject)" + uuidStr + "::draw,\n";
-    if(hasDestroy)srcEntries += " .destroy = (FuncObject)" + uuidStr + "::destroy,\n";
+    if(hasInit)srcEntries += " .init = (FuncObjData)" + uuidStr + "::init,\n";
+    if(hasUpdate)srcEntries += " .update = (FuncObjDataDelta)" + uuidStr + "::update,\n";
+    if(hasDraw)srcEntries += " .draw = (FuncObjDataDelta)" + uuidStr + "::draw,\n";
+    if(hasDestroy)srcEntries += " .destroy = (FuncObjData)" + uuidStr + "::destroy,\n";
     srcEntries += "},\n";
 
     sceneCtx.codeIdxMapUUID[script.uuid] = idx;

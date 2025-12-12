@@ -21,3 +21,8 @@ void Utils::FS::ensureFile(const std::string &path, const std::string &pathTempl
     std::filesystem::copy_file(pathTemplate, fsPath);
   }
 }
+
+void Utils::FS::delFile(const std::string &filePath)
+{
+  std::filesystem::remove(filePath);
+}

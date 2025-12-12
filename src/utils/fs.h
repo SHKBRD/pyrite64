@@ -33,4 +33,6 @@ namespace Utils::FS
 
   void ensureDir(const std::string &path);
   void ensureFile(const std::string &path, const std::string &pathTemplate);
+
+  void delFile(const std::string &filePath);
 }

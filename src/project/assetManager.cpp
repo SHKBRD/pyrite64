@@ -142,6 +142,8 @@ void Project::AssetManager::reload() {
         .type = type,
       };
 
+      entry.conf.baseScale = 16;
+
       // check if meta-data exists
       auto pathMeta = path;
       pathMeta += ".conf";

@@ -14,6 +14,8 @@ namespace Editor::Actions
     PROJECT_OPEN,
     PROJECT_CLOSE,
     PROJECT_BUILD,
+    PROJECT_CLEAN,
+    ASSETS_RELOAD,
   };
 
   using ActionFn = std::function<bool(const std::string&)>;

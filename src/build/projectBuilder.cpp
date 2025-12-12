@@ -166,8 +166,8 @@ bool Build::buildProject(std::string path)
   }
 
   // Build
-  Utils::Proc::runSyncLogged("make -C \"" + path + "\" -j8");
+  bool res = Utils::Proc::runSyncLogged("make -C \"" + path + "\" -j8");
 
   Utils::Logger::log("Build done!");
-  return true;
+  return res;
 }

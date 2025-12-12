@@ -15,7 +15,7 @@
 "uuid":2593312191,
 "selectable":true,
 "enabled":true,
-"isGroup":false,"pos":[0.0,0.0,0.0],"rot":[0.0,0.0,0.0,1.0],"scale":[1.0,1.0,1.0],"components":[{"id":3,
+"isGroup":false,"pos":[100.0,100.0,100.0],"rot":[0.0,0.0,0.0,1.0],"scale":[1.0,1.0,1.0],"components":[{"id":3,
 "uuid":591397515709753079,
 "name":"Camera","data":{"vpOffset":[0,0],"vpSize":[320,240],
 "fov":1.3089969158172607,

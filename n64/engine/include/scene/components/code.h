@@ -11,10 +11,10 @@ namespace P64::Comp
   struct Code
   {
     // @TODO: only store used functions
-    Script::FuncObject funcInit{};
-    Script::FuncObject funcUpdate{};
-    Script::FuncObject funcDraw{};
-    Script::FuncObject funcDestroy{};
+    Script::FuncObjData funcInit{};
+    Script::FuncObjDataDelta funcUpdate{};
+    Script::FuncObjDataDelta funcDraw{};
+    Script::FuncObjData funcDestroy{};
 
     static uint32_t getAllocSize(uint16_t* initData)
     {
@@ -45,14 +45,14 @@ namespace P64::Comp
       }
     }
 
-    static void update(Object& obj, Code* data) {
+    static void update(Object& obj, Code* data, float deltaTime) {
       char* funcData = (char*)data + sizeof(Code);
-      if(data->funcUpdate)data->funcUpdate(obj, funcData);
+      if(data->funcUpdate)data->funcUpdate(obj, funcData, deltaTime);
     }
 
-    static void draw(Object& obj, Code* data) {
+    static void draw(Object& obj, Code* data, float deltaTime) {
       char* funcData = (char*)data + sizeof(Code);
-      if(data->funcDraw)data->funcDraw(obj, funcData);
+      if(data->funcDraw)data->funcDraw(obj, funcData, deltaTime);
     }
   };
 }

@@ -23,6 +23,7 @@
 #include "SDL3_image/SDL_image.h"
 #include "tiny3d/tools/gltf_importer/src/structs.h"
 #include "utils/filePicker.h"
+#include "utils/fs.h"
 #include "utils/logger.h"
 #include "utils/proc.h"
 
@@ -151,27 +152,51 @@ int main(int argc, char** argv)
       ctx.project = new Project::Project(path);
       return true;
     });
+
     Editor::Actions::registerAction(Editor::Actions::Type::PROJECT_CLOSE, [](const std::string&) {
       delete ctx.project;
       ctx.project = nullptr;
       return true;
     });
+
+    Editor::Actions::registerAction(Editor::Actions::Type::PROJECT_CLEAN, [](const std::string& arg) {
+      if (ctx.isBuildOrRunning)return false;
+      if (!ctx.project)return false;
+      Utils::Logger::log("Clean Project");
+
+      std::string runCmd = "make -C \"" + ctx.project->getPath() + "\" clean";
+
+      ctx.isBuildOrRunning = true;
+      futureBuildRun = std::async(std::launch::async, [] (std::string runCmd)
+      {
+        Utils::Proc::runSyncLogged(runCmd);
+      }, runCmd);
+
+      return true;
+    });
+
     Editor::Actions::registerAction(Editor::Actions::Type::PROJECT_BUILD, [](const std::string& arg) {
       if (ctx.isBuildOrRunning)return false;
       if (!ctx.project)return false;
 
       ImGui::SetWindowFocus("Log");
 
+      auto z64Path = ctx.project->getPath() + "/" + ctx.project->conf.romName + ".z64";
+      Utils::FS::delFile(z64Path);
+
       std::string runCmd{};
       if (arg == "run") {
-        runCmd = ctx.project->conf.pathEmu + " " + ctx.project->getPath()
-          + "/" + ctx.project->conf.romName + ".z64";
+        runCmd = ctx.project->conf.pathEmu + " " + z64Path;
       }
 
       ctx.isBuildOrRunning = true;
       futureBuildRun = std::async(std::launch::async, [] (std::string path, std::string runCmd)
       {
-        Build::buildProject(path);
+        if(!Build::buildProject(path)) {
+          // @TODO: error popup
+          return;
+        }
+
         if (!runCmd.empty()) {
           Utils::Proc::runSyncLogged(runCmd);
         }
@@ -180,10 +205,17 @@ int main(int argc, char** argv)
       return true;
     });
 
+    Editor::Actions::registerAction(Editor::Actions::Type::ASSETS_RELOAD, [](const std::string&) {
+      if(ctx.project) {
+        ctx.project->getAssets().reload();
+      }
+      return true;
+    });
+
     Utils::Logger::clear();
 
     // TEST:
-    Editor::Actions::call(Editor::Actions::Type::PROJECT_OPEN, "/home/mbeboek/Documents/projects/pyrite64/n64/examples/hello_world");
+    Editor::Actions::call(Editor::Actions::Type::PROJECT_OPEN, "/home/mbeboek/Documents/projects/py64_projects/jam25");
 
     Renderer::Scene scene{};
     ctx.scene = &scene;
@@ -222,6 +254,10 @@ int main(int argc, char** argv)
 
           if (!(event.key.mod & SDL_KMOD_CTRL) && event.key.key == SDLK_F12) {
             Editor::Actions::call(Editor::Actions::Type::PROJECT_BUILD, "run");
+          }
+
+          if (!(event.key.mod & SDL_KMOD_CTRL) && event.key.key == SDLK_F5) {
+            Editor::Actions::call(Editor::Actions::Type::ASSETS_RELOAD);
           }
         }
         // Check: io.WantCaptureMouse, io.WantCaptureKeyboard

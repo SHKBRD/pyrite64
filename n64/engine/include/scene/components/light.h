@@ -52,7 +52,7 @@ namespace P64::Comp
       };
     }
 
-    static void update([[maybe_unused]] Object& obj, Light* data) {
+    static void update([[maybe_unused]] Object& obj, Light* data, float deltaTime) {
       auto &light = SceneManager::getCurrent().getLighting();
       if (data->type == 0) {
         light.addAmbientLight(data->color);
@@ -61,7 +61,7 @@ namespace P64::Comp
       }
     }
 
-    static void draw([[maybe_unused]] Object& obj, [[maybe_unused]] Light* data) {
+    static void draw([[maybe_unused]] Object& obj, [[maybe_unused]] Light* data, float deltaTime) {
 
     }
   };

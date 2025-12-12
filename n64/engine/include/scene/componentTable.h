@@ -11,8 +11,8 @@ namespace P64
 
   typedef uint32_t(*FuncGetAllocSize)(void*);
   typedef void(*FuncInitDel)(Object&, void*, void*);
-  typedef void(*FuncUpdate)(Object&, void*);
-  typedef void(*FuncDraw)(Object&, void*);
+  typedef void(*FuncUpdate)(Object&, void*, float deltaTime);
+  typedef void(*FuncDraw)(Object&, void*, float deltaTime);
 
   struct ComponentDef
   {

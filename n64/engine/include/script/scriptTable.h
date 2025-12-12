@@ -9,14 +9,15 @@ namespace P64 { class Object; }
 
 namespace P64::Script
 {
-  typedef void(*FuncObject)(Object&, void*);
+  typedef void(*FuncObjData)(Object&, void*);
+  typedef void(*FuncObjDataDelta)(Object&, void*, float);
 
   struct ScriptEntry
   {
-    FuncObject init;
-    FuncObject update;
-    FuncObject draw;
-    FuncObject destroy;
+    FuncObjData init;
+    FuncObjDataDelta update;
+    FuncObjDataDelta draw;
+    FuncObjData destroy;
   };
 
   // Note: generated and implement in the project:

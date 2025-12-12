@@ -39,5 +39,7 @@ namespace P64
 
     [[nodiscard]] const T3DVec3 &getTarget() const { return target; }
     [[nodiscard]] const T3DVec3 &getPos() const { return pos; }
+
+    fm_vec3_t getScreenPos(const fm_vec3_t &worldPos);
   };
 }

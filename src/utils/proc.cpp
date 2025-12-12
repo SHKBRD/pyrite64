@@ -32,7 +32,8 @@ std::string Utils::Proc::runSync(const std::string &cmd)
 }
 
 bool Utils::Proc::runSyncLogged(const std::string&cmd) {
-  FILE* pipe = popen(cmd.c_str(), "r");
+  auto cmdWithErr = cmd + " 2>&1"; // @TODO: windows handling
+  FILE* pipe = popen(cmdWithErr.c_str(), "r");
   if(!pipe)return "";
 
   char buffer[BUFF_SIZE];

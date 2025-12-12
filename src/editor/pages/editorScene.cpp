@@ -157,6 +157,7 @@ void Editor::Scene::draw()
     if(ImGui::BeginMenu("Build"))
     {
       if(ImGui::MenuItem(ICON_MDI_PLAY " Build"))Actions::call(Actions::Type::PROJECT_BUILD);
+      if(ImGui::MenuItem("Clean"))Actions::call(Actions::Type::PROJECT_CLEAN);
       ImGui::EndMenu();
     }
 
