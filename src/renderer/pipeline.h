@@ -28,6 +28,7 @@ namespace Renderer
         SDL_GPUPrimitiveType prim{};
         bool useDepth{};
         bool drawsObjID{};
+        bool translucent{};
         uint32_t vertPitch{};
         std::vector<InfoVertDef> vertLayout{};
       };

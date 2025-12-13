@@ -41,6 +41,7 @@ Renderer::Scene::Scene()
     .prim = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
     .useDepth = true,
     .drawsObjID = true,
+    .translucent = true,
     .vertPitch = sizeof(Vertex),
     .vertLayout = {
       {SDL_GPU_VERTEXELEMENTFORMAT_SHORT4     , offsetof(Renderer::Vertex, pos)},

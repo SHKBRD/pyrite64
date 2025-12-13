@@ -47,6 +47,7 @@ namespace Project::Component
     FuncCompDraw funcUpdate{};
     FuncCompDraw funcDraw{};
     FuncCompDraw3D funcDraw3D{};
+    FuncCompDraw3D funcDrawPost3D{};
     FuncCompSerial funcSerialize{};
     FuncCompDeserial funcDeserialize{};
     FuncCompBuild funcBuild{};
@@ -68,6 +69,7 @@ namespace Project::Component
   MAKE_COMP(Model)
   MAKE_COMP(Light)
   MAKE_COMP(Camera)
+  MAKE_COMP(CollMesh)
 
   constexpr std::array TABLE{
     CompInfo{
@@ -114,6 +116,17 @@ namespace Project::Component
       .funcSerialize = Camera::serialize,
       .funcDeserialize = Camera::deserialize,
       .funcBuild = Camera::build
+    },
+    CompInfo{
+      .id = 4,
+      .icon = ICON_MDI_CUBE_SCAN " ",
+      .name = "Collision-Mesh",
+      .funcInit = CollMesh::init,
+      .funcDraw = CollMesh::draw,
+      .funcDrawPost3D = CollMesh::draw3D,
+      .funcSerialize = CollMesh::serialize,
+      .funcDeserialize = CollMesh::deserialize,
+      .funcBuild = CollMesh::build
     },
   };
 }

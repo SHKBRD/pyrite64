@@ -193,6 +193,16 @@ bool color_depth_blending(
 }
 */
 
+void shaderCollision()
+{
+  if(!gl_FrontFacing) {
+    discard;
+  }
+
+  FragColor = vec4(cc_shade_flat.rgb + 0.25, 0.75);
+  ObjID = v_objectID;
+}
+
 void main()
 {
   vec4 cc0[4]; // inputs for 1. cycle
@@ -200,6 +210,11 @@ void main()
   vec4 ccValue = vec4(0.0); // result after 1/2 cycleß
 
   vec4 uvTex = uv;
+
+  if((DRAW_FLAGS & DRAW_SHADER_COLLISION) != 0) {
+    shaderCollision();
+    return;
+  }
 
   if((T3D_DRAW_FLAG & DRAWFLAG_CULL_BACK) != 0 && !gl_FrontFacing) {
     discard;

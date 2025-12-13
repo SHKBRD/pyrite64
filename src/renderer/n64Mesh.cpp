@@ -104,7 +104,9 @@ void Renderer::N64Mesh::draw(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer *cmdB
       return;
     }
 
+    uint32_t flags = uniforms.mat.flags;
     uniforms.mat = part.material;
+    uniforms.mat.flags |= flags;
 
     // @TODO: move out
     float clip = uniforms.mat.lightDir[0].w;

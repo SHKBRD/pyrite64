@@ -206,6 +206,13 @@ void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::S
     */
   });
 
+  iterateObjects(rootObj, [&](Project::Object &obj, Project::Component::Entry &comp) {
+    auto &def = Project::Component::TABLE[comp.id];
+    if(def.funcDrawPost3D) {
+      def.funcDrawPost3D(obj, comp, *this, cmdBuff, renderPass3D);
+    }
+  });
+
   meshLines->recreate(renderScene);
   meshSprites->recreate(renderScene);
 

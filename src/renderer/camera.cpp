@@ -16,7 +16,7 @@ namespace
 
 Renderer::Camera::Camera() {
   rot = glm::identity<glm::quat>();
-  posOffset = {0,0,2};
+  posOffset = {0,220,220};
 }
 
 void Renderer::Camera::update() {

@@ -106,4 +106,9 @@ void main()
 
   gl_Position = matMVP * vec4(vec3(inPosition), 1.0);
   posScreen = gl_Position.xy / gl_Position.w;
+
+  if((DRAW_FLAGS & DRAW_SHADER_COLLISION) != 0) {
+    cc_shade_flat.rgb = norm * 0.5 + 0.5;
+    gl_Position.z -= 0.0001;
+  }
 }

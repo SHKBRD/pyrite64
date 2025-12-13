@@ -43,8 +43,21 @@ Renderer::Pipeline::Pipeline(const Info &info) {
   pipelineInfo.vertex_input_state.num_vertex_attributes = vertexAttributes.size();
   pipelineInfo.vertex_input_state.vertex_attributes = vertexAttributes.data();
 
+  SDL_GPUColorTargetBlendState blend_state = {};
+  blend_state.enable_blend = true;
+  blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+  blend_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+  blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
+  blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+  blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+  blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+  blend_state.color_write_mask = SDL_GPU_COLORCOMPONENT_R | SDL_GPU_COLORCOMPONENT_G | SDL_GPU_COLORCOMPONENT_B | SDL_GPU_COLORCOMPONENT_A;
+
   SDL_GPUColorTargetDescription colorTargetDescriptions[2]{
-    {.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM},
+    {
+      .format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+      .blend_state = info.translucent ? blend_state : SDL_GPUColorTargetBlendState{}
+    },
     {.format = SDL_GPU_TEXTUREFORMAT_R32_UINT},
   };
 
