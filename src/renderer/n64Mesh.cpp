@@ -13,7 +13,7 @@
 namespace fs = std::filesystem;
 extern SDL_GPUSampler *texSamplerRepeat; // @TODO make sampler manager? is this even needed?
 
-void Renderer::N64Mesh::fromT3DM(const T3DMData &t3dmData, Project::AssetManager &assetManager)
+void Renderer::N64Mesh::fromT3DM(const T3DM::T3DMData &t3dmData, Project::AssetManager &assetManager)
 {
   loaded = false;
   mesh.vertices.clear();

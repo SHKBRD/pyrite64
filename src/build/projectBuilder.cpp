@@ -155,6 +155,9 @@ bool Build::buildProject(std::string path)
     buildScene(project, scene, sceneCtx);
   }
 
+  // T3DM Models & Collision
+  buildT3DMAssets(project, sceneCtx);
+
   // Makefile
   auto makefile = Utils::FS::loadTextFile("data/build/baseMakefile.mk");
 

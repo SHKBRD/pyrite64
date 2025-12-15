@@ -46,11 +46,11 @@ filesystem/%.sprite: assets/%.png
 	$(N64_MKSPRITE) $(MKSPRITE_FLAGS) -o $(dir $@) "$<"
 
 # 3D-Models
-filesystem/%.t3dm: assets/%.glb
-	@mkdir -p $(dir $@)
-	@echo "    [T3DM]"
-	$(T3D_GLTF_TO_3D) "$<" $@ $(T3DM_FLAGS)
-	$(N64_BINDIR)/mkasset $(T3DM_ASSET_FLAGS) -o $(dir $@) $@
+# filesystem/%.t3dm: assets/%.glb
+#	@mkdir -p $(dir $@)
+#	@echo "    [T3DM]"
+#	$(T3D_GLTF_TO_3D) "$<" $@ $(T3DM_FLAGS)
+#	$(N64_BINDIR)/mkasset $(T3DM_ASSET_FLAGS) -o $(dir $@) $@
 
 filesystem/p64/%: assets/p64/%
 	@mkdir -p $(dir $@)

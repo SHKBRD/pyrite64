@@ -62,7 +62,7 @@ namespace Project
         std::string romPath{};
         FileType type{};
         std::shared_ptr<Renderer::Texture> texture{nullptr};
-        T3DMData t3dmData{};
+        T3DM::T3DMData t3dmData{};
         std::shared_ptr<Renderer::N64Mesh> mesh3D{};
         AssetConf conf{};
         Utils::CPP::Struct params{};

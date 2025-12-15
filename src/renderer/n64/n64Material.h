@@ -8,5 +8,5 @@
 
 namespace Renderer::N64Material
 {
-  void convert(N64Mesh::MeshPart &part, const Material &t3dMat);
+  void convert(N64Mesh::MeshPart &part, const T3DM::Material &t3dMat);
 }

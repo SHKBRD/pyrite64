@@ -79,9 +79,18 @@ void Project::AssetManager::reloadEntry(Entry &entry, const std::string &path)
     case FileType::MODEL_3D:
     {
       try{
-        config.assetPath = fs::path{project->getPath()} / "assets" / "";
-        config.assetPathFull = fs::absolute(config.assetPath).string();
-        entry.t3dmData = parseGLTF(path.c_str(), entry.conf.baseScale);
+        T3DM::config = {
+          .globalScale = (float)entry.conf.baseScale,
+          .animSampleRate = 60,
+          //.ignoreMaterials = args.checkArg("--ignore-materials"),
+          //.ignoreTransforms = args.checkArg("--ignore-transforms"),
+          .createBVH = entry.conf.gltfBVH,
+          .verbose = false,
+          .assetPath = "assets/",
+          .assetPathFull = fs::absolute(project->getPath() + "/assets").string(),
+        };
+
+        entry.t3dmData = T3DM::parseGLTF(path.c_str());
         if (!entry.t3dmData.models.empty()) {
           if (!entry.mesh3D) {
             entry.mesh3D = std::make_shared<Renderer::N64Mesh>();

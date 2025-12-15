@@ -29,7 +29,11 @@
 
 constinit Context ctx{};
 constinit SDL_GPUSampler *texSamplerRepeat{nullptr};
-constinit Config config;
+
+namespace T3DM
+{
+  thread_local Config config{};
+}
 
 namespace {
 

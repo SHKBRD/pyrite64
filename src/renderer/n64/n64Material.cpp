@@ -28,7 +28,7 @@ namespace
   }
 }
 
-void Renderer::N64Material::convert(N64Mesh::MeshPart &part, const Material &t3dMat)
+void Renderer::N64Material::convert(N64Mesh::MeshPart &part, const T3DM::Material &t3dMat)
 {
   auto &texA = t3dMat.texA;
   auto &texB = t3dMat.texB;

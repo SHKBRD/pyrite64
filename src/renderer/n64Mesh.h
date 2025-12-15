@@ -34,7 +34,7 @@ namespace Renderer
       Renderer::Scene *scene{};
 
     public:
-      void fromT3DM(const T3DMData &t3dmData, Project::AssetManager &assetManager);
+      void fromT3DM(const T3DM::T3DMData &t3dmData, Project::AssetManager &assetManager);
 
       void recreate(Renderer::Scene &sc);
       void draw(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer *cmdBuff, UniformsObject &uniforms);

@@ -27,6 +27,7 @@ add_executable(p64editor src/main.cpp
 
         # tiny3d gltf converter
         vendored/tiny3d/tools/gltf_importer/src/parser.cpp
+        vendored/tiny3d/tools/gltf_importer/src/writer.cpp
         vendored/tiny3d/tools/gltf_importer/src/parser/materialParser.cpp
         vendored/tiny3d/tools/gltf_importer/src/parser/boneParser.cpp
         vendored/tiny3d/tools/gltf_importer/src/parser/nodeParser.cpp
@@ -161,6 +162,9 @@ add_executable(p64editor src/main.cpp
         n64/engine/include/scene/objectFlags.h
         src/utils/fs.cpp
         src/project/component/types/compCollMesh.cpp
+        src/project/assets/collision.h
+        src/project/assets/collision.cpp
+        src/build/t3dmBuilder.cpp
 )
 
 target_include_directories(p64editor PRIVATE
