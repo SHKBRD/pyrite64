@@ -50,5 +50,9 @@ namespace Project
 
       std::string serialize() const;
       void deserialize(Scene *scene, const simdjson::simdjson_result<simdjson::dom::element> &doc);
+
+      bool isPrefabInstance() const {
+        return uuidPrefab.value != 0;
+      }
   };
 }

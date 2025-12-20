@@ -48,6 +48,13 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
   {
     auto &obj = *objEntry.second;
 
+    auto srcObj = &obj;
+    if(obj.isPrefabInstance())
+    {
+      auto prefab = project.getAssets().getPrefabByUUID(srcObj->uuidPrefab.value);
+      if(prefab)srcObj = &prefab->obj;
+    }
+
     uint16_t objFlags = 0;
     if(obj.enabled)objFlags |= P64::ObjectFlags::ACTIVE;
     if(obj.isGroup)objFlags |= P64::ObjectFlags::IS_GROUP;
@@ -56,15 +63,15 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
     ctx.fileObj.write<uint16_t>(obj.id);
     ctx.fileObj.write<uint16_t>(obj.parent ? obj.parent->id : 0);
     ctx.fileObj.write<uint16_t>(0); // padding
-    ctx.fileObj.write(obj.pos.resolve(obj.propOverrides));
-    ctx.fileObj.write(obj.scale.resolve(obj.propOverrides));
+    ctx.fileObj.write(srcObj->pos.resolve(obj.propOverrides));
+    ctx.fileObj.write(srcObj->scale.resolve(obj.propOverrides));
 
-    auto &rot = obj.rot.resolve(obj.propOverrides);
+    auto &rot = srcObj->rot.resolve(obj.propOverrides);
     uint32_t quatQuant = T3D::Quantizer::quatTo32Bit({rot.x, rot.y, rot.z, rot.w});
     ctx.fileObj.write(quatQuant);
 
     // DATA
-    for (auto &comp : obj.components) {
+    for (auto &comp : srcObj->components) {
       auto compPos = ctx.fileObj.getPos();
       ctx.fileObj.skip(2);
       ctx.fileObj.skip(2); // flags (@TODO)
