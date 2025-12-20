@@ -437,7 +437,12 @@ void Editor::Viewport3D::draw()
     glm::vec3 skew{0,0,0};
     glm::vec4 persp{0,0,0,1};
 
-    gizmoMat = glm::recompose(obj->scale.value, obj->rot.value, obj->pos.value, skew, persp);
+    bool isOverride = false;
+    gizmoMat = glm::recompose(
+      obj->scale.resolve(obj->propOverrides, &isOverride),
+      obj->rot.resolve(obj->propOverrides),
+      obj->pos.resolve(obj->propOverrides),
+    skew, persp);
 
     glm::vec3 snap(10.0f);
     if (gizmoOp == 1) {
@@ -454,13 +459,16 @@ void Editor::Viewport3D::draw()
       nullptr,
       isSnap ? glm::value_ptr(snap) : nullptr
     )) {
-      glm::decompose(
-        gizmoMat,
-        obj->scale.value,
-        obj->rot.value,
-        obj->pos.value,
-        skew, persp
-      );
+      if(!obj->uuidPrefab.value || isOverride)
+      {
+        glm::decompose(
+          gizmoMat,
+          obj->scale.resolve(obj->propOverrides),
+          obj->rot.resolve(obj->propOverrides),
+          obj->pos.resolve(obj->propOverrides),
+          skew, persp
+        );
+      }
     }
   }
 

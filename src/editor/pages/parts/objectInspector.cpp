@@ -51,6 +51,11 @@ void Editor::ObjectInspector::draw() {
       //ImTable::add("UUID");
       //ImGui::Text("0x%16lX", obj->uuid);
 
+      if(isPrefabInst) {
+        ImTable::add("Prefab");
+        ImGui::Text("%s", srcObj->name.c_str());
+      }
+
       ImTable::end();
     }
   }
@@ -68,7 +73,7 @@ void Editor::ObjectInspector::draw() {
 
   uint64_t compDelUUID = 0;
   Project::Component::Entry *compCopy = nullptr;
-  for (auto &comp : obj->components)
+  for (auto &comp : srcObj->components)
   {
     ImGui::PushID(&comp);
 
@@ -99,8 +104,8 @@ void Editor::ObjectInspector::draw() {
     ImGui::PopID();
   }
 
-  auto objStr = obj->serialize();
-  ImGui::TextWrapped("%s", objStr.c_str());
+  // Debug:
+  //ImGui::TextWrapped("%s", obj->serialize().c_str());
 
   if(isPrefabInst)return;
 

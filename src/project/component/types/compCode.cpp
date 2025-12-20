@@ -101,20 +101,11 @@ namespace Project::Component::Code
     auto &assets = ctx.project->getAssets();
     auto &scriptList = assets.getTypeEntries(AssetManager::FileType::CODE_OBJ);
 
-    if (ImTable::start("Comp")) {
+    if (ImTable::start("Comp", &obj)) {
       ImTable::add("Name", entry.name);
       ImTable::add("Script");
+      int idx = ImTable::addVecComboBox("Script", scriptList, data.scriptUUID);
       //ImGui::InputScalar("##UUID", ImGuiDataType_U64, &data.scriptUUID);
-
-      int idx = scriptList.size();
-      for (int i=0; i<scriptList.size(); ++i) {
-        if (scriptList[i].uuid == data.scriptUUID) {
-          idx = i;
-          break;
-        }
-      }
-
-      ImGui::Combo("##UUID", &idx, getter, nullptr, scriptList.size()+1);
 
       if (idx < scriptList.size()) {
         const auto &script = scriptList[idx];
@@ -136,13 +127,12 @@ namespace Project::Component::Code
 
           if(field.type == Utils::DataType::ASSET_SPRITE)
           {
-            ImTable::add(name);
             const auto &assets = ctx.project->getAssets().getTypeEntries(AssetManager::FileType::IMAGE);
             uint64_t uuid = Utils::parseU64(data.args[field.name].value);
-            ImGui::VectorComboBox("##arg" + std::to_string(idx), assets, uuid);
+            ImTable::addVecComboBox(name, assets, uuid);
             data.args[field.name].value = std::to_string(uuid);
           } else {
-            ImTable::add(name, data.args[field.name].value);
+            ImTable::addProp(name, data.args[field.name]);
           }
           ++idx;
         }

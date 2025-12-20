@@ -45,7 +45,7 @@ namespace ImGui
   }
 
   template<typename T>
-  inline void VectorComboBox(
+  int VectorComboBox(
     const std::string &name,
     const std::vector<T> &items,
     auto &id
@@ -66,6 +66,7 @@ namespace ImGui
 
     ImGui::Combo(name.c_str(), &idx, getter, (void*)&items, (int)items.size());
     id = items[idx].getId();
+    return idx;
   }
 }
 
@@ -100,22 +101,43 @@ namespace ImTable
     ImGui::TableSetColumnIndex(1);
   }
 
+  template<typename T>
+  inline int addVecComboBox(const std::string &name, const std::vector<T> &items, auto &id)
+  {
+    add(name);
+    bool disabled = (obj && obj->uuidPrefab.value);
+    if(disabled)ImGui::BeginDisabled();
+    int res = ImGui::VectorComboBox(name, items, id);
+    if(disabled)ImGui::EndDisabled();
+    return res;
+  }
+
+
   inline void addComboBox(const std::string &name, int &itemCurrent, const char* const items[], int itemsCount) {
     add(name);
+    bool disabled = (obj && obj->uuidPrefab.value);
     auto labelHidden = "##" + name;
+    if(disabled)ImGui::BeginDisabled();
     ImGui::Combo(labelHidden.c_str(), &itemCurrent, items, itemsCount);
+    if(disabled)ImGui::EndDisabled();
   }
 
   inline void addComboBox(const std::string &name, int &itemCurrent, const std::vector<const char*> &items) {
     add(name);
+    bool disabled = (obj && obj->uuidPrefab.value);
+    if(disabled)ImGui::BeginDisabled();
     auto labelHidden = "##" + name;
     ImGui::Combo(labelHidden.c_str(), &itemCurrent, items.data(), (int)items.size());
+    if(disabled)ImGui::EndDisabled();
   }
 
   inline void addCheckBox(const std::string &name, bool &value) {
     add(name);
+    bool disabled = (obj && obj->uuidPrefab.value);
+    if(disabled)ImGui::BeginDisabled();
     auto labelHidden = "##" + name;
     ImGui::Checkbox(labelHidden.c_str(), &value);
+    if(disabled)ImGui::BeginDisabled();
   }
 
   template<typename T>
@@ -140,8 +162,12 @@ namespace ImTable
   template<typename T>
   bool add(const std::string &name, T &value) {
     add(name);
+    bool disabled = false;
+    if(obj && obj->uuidPrefab.value)disabled = true;
     ImGui::PushID(name.c_str());
+    if(disabled)ImGui::BeginDisabled();
     bool res = typedInput<T>(&value);
+    if(disabled)ImGui::EndDisabled();
     ImGui::PopID();
     return res;
   }
@@ -174,11 +200,14 @@ namespace ImTable
 
   inline void addColor(const std::string &name, glm::vec4 &color, bool withAlpha = true) {
     add(name);
+    bool disabled = (obj && obj->uuidPrefab.value);
+    if(disabled)ImGui::BeginDisabled();
     if (withAlpha) {
       ImGui::ColorEdit4(name.c_str(), glm::value_ptr(color), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
     } else {
       ImGui::ColorEdit3(name.c_str(), glm::value_ptr(color), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
     }
+    if(disabled)ImGui::EndDisabled();
   }
 
   inline void addPath(const std::string &name, std::string &str, bool isDir = false, const std::string &placeholder = "") {
