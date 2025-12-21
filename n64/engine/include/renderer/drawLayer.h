@@ -13,6 +13,8 @@ namespace P64::DrawLayer
   inline void useDefault() { use(0); }
 
   void drawAll();
+  void draw(uint32_t layerIdx);
+  void nextFrame();
 
   constexpr uint32_t LAYER_OPAQUE = 0;
   constexpr uint32_t LAYER_TRANS = 1;

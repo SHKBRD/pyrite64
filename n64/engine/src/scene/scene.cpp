@@ -14,7 +14,8 @@
 #include "assets/assetManager.h"
 #include "audio/audioManager.h"
 #include "../audio/audioManagerPrivate.h"
-#include "../renderer/pipeline.h"
+#include "renderer/pipeline.h"
+#include "renderer/pipelineHDRBloom.h"
 #include "debug/debugDraw.h"
 #include "renderer/drawLayer.h"
 #include "scene/componentTable.h"
@@ -31,9 +32,16 @@ P64::Scene::Scene(uint16_t sceneId, Scene** ref)
   if(ref)*ref = this;
   Debug::init();
 
-  renderPipeline = new RenderPipelineDefault(*this);
-
   loadSceneConfig();
+
+  switch(conf.pipeline)
+  {
+    case 0: renderPipeline = new RenderPipelineDefault(*this); break;
+    case 1: renderPipeline = new RenderPipelineHDRBloom(*this); break;
+
+    default: assertf(false, "Unknown render pipeline %d", conf.pipeline);
+  }
+
 
   state.screenSize[0] = conf.screenWidth;
   state.screenSize[1] = conf.screenHeight;

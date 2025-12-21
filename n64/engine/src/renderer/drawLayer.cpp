@@ -74,13 +74,28 @@ void P64::DrawLayer::use(uint32_t idx)
 
 void P64::DrawLayer::drawAll()
 {
-  auto nextFrameIdx = (frameIdx + 1) % LAYER_BUFFER_COUNT;
-  for(auto &layer : layers)
-  {
+  for(auto &layer : layers) {
     LD::RSPQ::exec(layer[frameIdx].pointer, layer[frameIdx].current);
-
-    layer[nextFrameIdx].current = layer[nextFrameIdx].pointer;
-    sys_hw_memset64((void*)layer[nextFrameIdx].pointer, 0, LAYER_BUFFER_WORDS * sizeof(uint32_t));
   }
-  frameIdx = nextFrameIdx;
+}
+
+void P64::DrawLayer::draw(uint32_t layerIdx)
+{
+  assertf(layerIdx != 0, "Layer 0 is drawn in real-time");
+  assertf(layerIdx - 1 < layers.size(), "Invalid layer index %lu", layerIdx);
+
+  auto &layer = layers[layerIdx-1];
+  LD::RSPQ::exec(layer[frameIdx].pointer, layer[frameIdx].current);
+}
+
+void P64::DrawLayer::nextFrame()
+{
+  frameIdx = (frameIdx + 1) % LAYER_BUFFER_COUNT;
+
+  for(auto &layer : layers) {
+    layer[frameIdx].current = layer[frameIdx].pointer;
+
+    // @TODO: is this needed?
+    sys_hw_memset64((void*)layer[frameIdx].pointer, 0, LAYER_BUFFER_WORDS * sizeof(uint32_t));
+  }
 }

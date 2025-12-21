@@ -434,7 +434,6 @@ void Editor::Viewport3D::draw()
 
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-  glm::mat4 unit = glm::mat4(1.0f);
   ImGuizmo::SetDrawlist(draw_list);
   ImGuizmo::SetRect(currPos.x, currPos.y, currSize.x, currSize.y);
 

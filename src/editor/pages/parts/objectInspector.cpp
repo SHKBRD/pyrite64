@@ -62,9 +62,9 @@ void Editor::ObjectInspector::draw() {
 
   if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
     if (ImTable::start("Transform", obj.get())) {
-      ImTable::addProp("Pos", srcObj->pos);
-      ImTable::addProp("Scale", srcObj->scale);
-      ImTable::addProp("Rot", srcObj->rot);
+      ImTable::addObjProp("Pos", srcObj->pos);
+      ImTable::addObjProp("Scale", srcObj->scale);
+      ImTable::addObjProp("Rot", srcObj->rot);
       ImTable::end();
     }
   }

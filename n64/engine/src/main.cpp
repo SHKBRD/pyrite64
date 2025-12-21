@@ -11,6 +11,7 @@
 #include "scene/globalState.h"
 #include "./audio/audioManagerPrivate.h"
 #include "assets/assetManager.h"
+#include "libdragon/utils.h"
 #include "renderer/drawLayer.h"
 #include "script/globalScript.h"
 
@@ -36,6 +37,8 @@ int main()
 {
 	debug_init_isviewer();
 	debug_init_usblog();
+
+  P64::LD::init();
 
   asset_init_compression(2);
   // asset_init_compression(3);

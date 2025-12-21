@@ -28,6 +28,9 @@ namespace P64
     uint32_t flags{};
     color_t clearColor{};
     uint32_t objectCount{};
+
+    uint8_t pipeline{};
+    uint8_t padding[3];
   };
 
   class Scene

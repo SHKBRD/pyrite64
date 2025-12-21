@@ -39,8 +39,8 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
   uint32_t sceneFlags = 0;
   uint32_t objCount = sc->objectsMap.size();
 
-  if (sc->conf.doClearDepth)sceneFlags |= FLAG_CLR_DEPTH;
-  if (sc->conf.doClearColor)sceneFlags |= FLAG_CLR_COLOR;
+  if (sc->conf.doClearDepth.value)sceneFlags |= FLAG_CLR_DEPTH;
+  if (sc->conf.doClearColor.value)sceneFlags |= FLAG_CLR_COLOR;
   if (sc->conf.fbFormat)sceneFlags |= FLAG_SCR_32BIT;
 
   ctx.fileObj = {};
@@ -105,7 +105,9 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
   ctx.fileScene.write(sceneFlags);
   ctx.fileScene.writeRGBA(sc->conf.clearColor);
   ctx.fileScene.write(objCount);
+  ctx.fileScene.write<uint8_t>(sc->conf.renderPipeline.value);
 
+  ctx.fileScene.align(4);
   ctx.fileScene.writeToFile(fsDataPath / fileNameScene);
 
   Utils::FS::saveTextFile(fsDataPath / fileNameStr, "TODO");

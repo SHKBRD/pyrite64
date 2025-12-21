@@ -14,13 +14,14 @@ namespace Project
 {
   struct SceneConf
   {
-    std::string name{};
+    PROP_STRING(name);
     int fbWidth{320};
     int fbHeight{240};
     int fbFormat{0};
     glm::vec4 clearColor{};
-    bool doClearColor{};
-    bool doClearDepth{};
+    PROP_BOOL(doClearColor);
+    PROP_BOOL(doClearDepth);
+    PROP_S32(renderPipeline);
 
     std::string serialize() const;
   };
@@ -38,7 +39,7 @@ namespace Project
       Scene(int id_, const std::string &projectPath);
 
       int getId() const { return id; }
-      const std::string &getName() const { return conf.name; }
+      const std::string &getName() const { return conf.name.value; }
 
       void save();
       Object& getRootObject() { return root; }

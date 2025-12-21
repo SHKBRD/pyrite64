@@ -58,7 +58,7 @@ namespace ImGui
     auto getter = [](void* itemsLocal, int idx)
     {
       auto &items = *static_cast<std::vector<T>*>(itemsLocal);
-      if (idx >= 0 && idx < items.size()) {
+      if (idx >= 0 && idx < (int)items.size()) {
         return items[idx].getName().c_str();
       }
       return "<None>";
@@ -144,6 +144,8 @@ namespace ImTable
   {
     if constexpr (std::is_same_v<T, float>) {
       return ImGui::InputFloat("##", value);
+    } else if constexpr (std::is_same_v<T, bool>) {
+      return ImGui::Checkbox("##", value);
     } else if constexpr (std::is_same_v<T, int>) {
       return ImGui::InputInt("##", value);
     } else if constexpr (std::is_same_v<T, glm::vec3>) {
@@ -172,7 +174,17 @@ namespace ImTable
   }
 
   template<typename T>
-  bool addProp(
+  bool addProp(const std::string &name, Property<T> &prop)
+  {
+    add(name);
+    ImGui::PushID(name.c_str());
+    bool res = typedInput<T>(&prop.value);
+    ImGui::PopID();
+    return res;
+  }
+
+  template<typename T>
+  bool addObjProp(
     const std::string &name,
     Property<T> &prop
   )

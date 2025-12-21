@@ -17,7 +17,14 @@ void Editor::SceneInspector::draw() {
 
   if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
     ImTable::start("Settings");
-    ImTable::add("Name", scene->conf.name);
+    ImTable::addProp("Name", scene->conf.name);
+
+    constexpr const char* OPTIONS[] = {"Default", "HDR-Bloom", "HiRes-Tex (256x)"};
+    ImTable::addComboBox(
+      "Pipeline",
+      scene->conf.renderPipeline.value,
+      OPTIONS, 3
+    );
 
     ImTable::end();
   }
@@ -34,8 +41,8 @@ void Editor::SceneInspector::draw() {
     ImTable::addColor("Color", scene->conf.clearColor, false);
     scene->conf.clearColor.a = 1.0f;
 
-    ImTable::addCheckBox("Clear Color", scene->conf.doClearColor);
-    ImTable::addCheckBox("Clear Depth", scene->conf.doClearDepth);
+    ImTable::addProp("Clear Color", scene->conf.doClearColor);
+    ImTable::addProp("Clear Depth", scene->conf.doClearDepth);
     ImTable::end();
   }
 }

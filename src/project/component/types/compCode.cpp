@@ -90,7 +90,7 @@ namespace Project::Component::Code
   const char* getter(void* user_data, int idx)
   {
     auto &scriptList = ctx.project->getAssets().getTypeEntries(AssetManager::FileType::CODE_OBJ);
-    if (idx < 0 || idx >= scriptList.size())return "<Select Script>";
+    if (idx < 0 || idx >= (int)scriptList.size())return "<Select Script>";
     return scriptList[idx].name.c_str();
   }
 
@@ -106,7 +106,7 @@ namespace Project::Component::Code
       int idx = ImTable::addVecComboBox("Script", scriptList, data.scriptUUID);
       //ImGui::InputScalar("##UUID", ImGuiDataType_U64, &data.scriptUUID);
 
-      if (idx < scriptList.size()) {
+      if (idx < (int)scriptList.size()) {
         const auto &script = scriptList[idx];
         data.scriptUUID = script.uuid;
 
@@ -136,7 +136,7 @@ namespace Project::Component::Code
             ImTable::addVecComboBox(name, assets, uuid);
             data.args[field.name].value = std::to_string(uuid);
           } else {
-            ImTable::addProp(name, data.args[field.name]);
+            ImTable::addObjProp(name, data.args[field.name]);
           }
           ++idx;
         }

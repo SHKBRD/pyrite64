@@ -21,13 +21,14 @@ namespace
 std::string Project::SceneConf::serialize() const {
 
   Utils::JSON::Builder builder{};
-  builder.set("name", name);
+  builder.set(name);
   builder.set("fbWidth", fbWidth);
   builder.set("fbHeight", fbHeight);
   builder.set("fbFormat", fbFormat);
   builder.set("clearColor", clearColor);
-  builder.set("doClearColor", doClearColor);
-  builder.set("doClearDepth", doClearDepth);
+  builder.set(doClearColor);
+  builder.set(doClearDepth);
+  builder.set(renderPipeline);
   return builder.toString();
 }
 
@@ -210,13 +211,14 @@ void Project::Scene::deserialize(const std::string &data)
 
   auto docConf = doc["conf"];
   if (docConf.is_object()) {
-    conf.name = Utils::JSON::readString(docConf, "name");
+    Utils::JSON::readProp(docConf, conf.name);
     conf.fbWidth = Utils::JSON::readInt(docConf, "fbWidth");
     conf.fbHeight = Utils::JSON::readInt(docConf, "fbHeight");
     conf.fbFormat = Utils::JSON::readInt(docConf, "fbFormat");
     conf.clearColor = Utils::JSON::readColor(docConf, "clearColor");
-    conf.doClearColor = Utils::JSON::readBool(docConf, "doClearColor");
-    conf.doClearDepth = Utils::JSON::readBool(docConf, "doClearDepth");
+    Utils::JSON::readProp(docConf, conf.doClearColor);
+    Utils::JSON::readProp(docConf, conf.doClearDepth);
+    Utils::JSON::readProp(docConf, conf.renderPipeline);
   }
 
   removeAllObjects();

@@ -13,6 +13,9 @@ namespace P64
   {
     protected:
       Scene &scene;
+
+      void setupLayer();
+
     public:
       explicit RenderPipeline(Scene &sc) : scene{sc} {}
 

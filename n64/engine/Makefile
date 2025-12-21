@@ -14,10 +14,12 @@ src = $(wildcard src/*.cpp) $(wildcard src/vi/*.cpp) $(wildcard src/lib/*.cpp)
 src += $(wildcard src/scene/*.cpp) $(wildcard src/audio/*.cpp) $(wildcard src/assets/*.cpp)
 src += $(wildcard src/collision/*.cpp) $(wildcard src/debug/*.cpp)
 src += $(wildcard src/scene/components/*.cpp) $(wildcard src/renderer/*.cpp)
+src += $(wildcard src/renderer/hdr/*.cpp)
+src += $(wildcard src/libdragon/*.cpp)
 
 all: $(BUILD_DIR)/$(PROJECT_NAME).a
 
-$(BUILD_DIR)/$(PROJECT_NAME).a: $(src:%.cpp=$(BUILD_DIR)/%.o)
+$(BUILD_DIR)/$(PROJECT_NAME).a: $(src:%.cpp=$(BUILD_DIR)/%.o) $(BUILD_DIR)/renderer/hdr/rsp_fx.o
 	@mkdir -p $(dir $@)
 	@echo "    [LD_LIB] $<"
 	$(N64_LD) -r -o $(BUILD_DIR)/$(PROJECT_NAME).a $^

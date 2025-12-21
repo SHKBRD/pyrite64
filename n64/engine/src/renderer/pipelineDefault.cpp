@@ -2,13 +2,34 @@
 * @copyright 2025 - Max Bebök
 * @license MIT
 */
-#include "pipeline.h"
+#include "renderer/pipeline.h"
 #include "debug/debugDraw.h"
 #include "lib/memory.h"
 #include "renderer/drawLayer.h"
 #include "scene/globalState.h"
 #include "scene/scene.h"
 #include "vi/swapChain.h"
+
+void P64::RenderPipeline::setupLayer()
+{
+  rdpq_mode_begin();
+    rdpq_set_mode_standard();
+    rdpq_mode_antialias(AA_NONE);
+    rdpq_mode_zbuf(true, true);
+    rdpq_mode_persp(true);
+    rdpq_mode_filter(FILTER_BILINEAR);
+    rdpq_mode_dithering(DITHER_NONE_NONE);
+    rdpq_mode_blender(0);
+    rdpq_mode_fog(0);
+  rdpq_mode_end();
+
+  DrawLayer::use(DrawLayer::LAYER_2D);
+    rdpq_sync_pipe();
+    rdpq_sync_load();
+    rdpq_sync_tile();
+    rdpq_set_mode_standard();
+  DrawLayer::useDefault();
+}
 
 void P64::RenderPipelineDefault::init()
 {
@@ -36,23 +57,7 @@ P64::RenderPipelineDefault::~RenderPipelineDefault()
 
 void P64::RenderPipelineDefault::preDraw()
 {
-  rdpq_mode_begin();
-    rdpq_set_mode_standard();
-    rdpq_mode_antialias(AA_NONE);
-    rdpq_mode_zbuf(true, true);
-    rdpq_mode_persp(true);
-    rdpq_mode_filter(FILTER_BILINEAR);
-    rdpq_mode_dithering(DITHER_NONE_NONE);
-    rdpq_mode_blender(0);
-    rdpq_mode_fog(0);
-  rdpq_mode_end();
-
-  DrawLayer::use(DrawLayer::LAYER_2D);
-    rdpq_sync_pipe();
-    rdpq_sync_load();
-    rdpq_sync_tile();
-    rdpq_set_mode_standard();
-  DrawLayer::useDefault();
+  setupLayer();
 
   if(scene.getConf().flags & SceneConf::FLAG_CLR_DEPTH) {
     t3d_screen_clear_depth();
@@ -65,4 +70,5 @@ void P64::RenderPipelineDefault::preDraw()
 void P64::RenderPipelineDefault::draw()
 {
   DrawLayer::drawAll();
+  DrawLayer::nextFrame();
 }

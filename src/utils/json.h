@@ -28,27 +28,28 @@ namespace Utils::JSON
     return doc;
   }
 
-  inline std::string readString(const simdjson::simdjson_result<simdjson::dom::element> &el, const std::string &key) {
+  template<typename T>
+  std::string readString(const simdjson::simdjson_result<T> &el, const std::string &key, const std::string &defaultValue = "") {
     auto val = el[key];
     if (val.error() != simdjson::SUCCESS) {
-      return "";
+      return defaultValue;
     }
     auto str = val.get_string();
     if (str.error() != simdjson::SUCCESS) {
-      return "";
+      return defaultValue;
     }
     return std::string{str->data(), str->length()};
   }
 
   template<typename T>
-  inline int readInt(const simdjson::simdjson_result<T> &el, const std::string &key) {
+  inline int readInt(const simdjson::simdjson_result<T> &el, const std::string &key, int def = 0) {
     auto val = el[key];
     if (val.error() != simdjson::SUCCESS) {
-      return 0;
+      return def;
     }
     auto i = val.get_int64();
     if (i.error() != simdjson::SUCCESS) {
-      return 0;
+      return def;
     }
     return (int)(*i);
   }
@@ -163,30 +164,27 @@ namespace Utils::JSON
     PROP val{};
     if constexpr (std::is_same_v<PROP, bool>) {
       val = readBool(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, uint32_t>) {
+    } else if constexpr (std::is_same_v<PROP, uint32_t>) {
       val = readU32(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, uint64_t>) {
+    } else if constexpr (std::is_same_v<PROP, uint64_t>) {
       val = readU64(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, int32_t>) {
+    } else if constexpr (std::is_same_v<PROP, int32_t>) {
       val = readInt(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, int64_t>) {
+    } else if constexpr (std::is_same_v<PROP, int64_t>) {
       val = (int64_t)readInt(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, float>) {
+    } else if constexpr (std::is_same_v<PROP, float>) {
       val = readFloat(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, glm::vec3>) {
+    } else if constexpr (std::is_same_v<PROP, glm::vec3>) {
       val = readVec3(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, glm::vec4>) {
+    } else if constexpr (std::is_same_v<PROP, glm::vec4>) {
       val = readColor(el, prop.name, defValue);
-    }
-    else if constexpr (std::is_same_v<PROP, glm::quat>) {
+    } else if constexpr (std::is_same_v<PROP, glm::quat>) {
       val = readQuat(el, prop.name);
+    } else if constexpr (std::is_same_v<PROP, std::string>) {
+      val = readString(el, prop.name, defValue);
+    } else
+    {
+      static_assert(false, "Unsupported type in Utils::JSON::readProp");
     }
 
     prop.value = val;

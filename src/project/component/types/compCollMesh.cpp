@@ -92,7 +92,7 @@ namespace Project::Component::CollMesh
         data.obj3D.removeMesh();
       }
 
-      if (idx < modelList.size()) {
+      if (idx < (int)modelList.size()) {
         const auto &script = modelList[idx];
         data.modelUUID.value = script.uuid;
       }
