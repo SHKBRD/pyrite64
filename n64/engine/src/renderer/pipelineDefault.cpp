@@ -22,13 +22,6 @@ void P64::RenderPipeline::setupLayer()
     rdpq_mode_blender(0);
     rdpq_mode_fog(0);
   rdpq_mode_end();
-
-  DrawLayer::use(DrawLayer::LAYER_2D);
-    rdpq_sync_pipe();
-    rdpq_sync_load();
-    rdpq_sync_tile();
-    rdpq_set_mode_standard();
-  DrawLayer::useDefault();
 }
 
 void P64::RenderPipelineDefault::init()
@@ -69,6 +62,9 @@ void P64::RenderPipelineDefault::preDraw()
 
 void P64::RenderPipelineDefault::draw()
 {
-  DrawLayer::drawAll();
+  DrawLayer::draw3D();
+  DrawLayer::drawPtx();
+  DrawLayer::draw2D();
+
   DrawLayer::nextFrame();
 }

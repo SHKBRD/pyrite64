@@ -73,7 +73,7 @@ int main()
   vi_set_divot(false);
   vi_set_gamma(VI_GAMMA_DISABLE);
 
-  P64::DrawLayer::init(3);
+  P64::DrawLayer::reset();
   P64::MatrixManager::reset();
   P64::VI::SwapChain::init();
 

@@ -10,6 +10,8 @@
 #include "lighting.h"
 #include "object.h"
 #include "collision/scene.h"
+#include "lib/types.h"
+#include "renderer/drawLayer.h"
 #include "renderer/pipeline.h"
 #include "scene/camera.h"
 
@@ -49,7 +51,9 @@ namespace P64
     uint32_t objectCount{};
 
     Pipeline pipeline{};
-    uint8_t padding[3];
+    uint8_t padding[3]{};
+
+    DrawLayer::Setup layerSetup{};
   };
 
   class Scene
@@ -83,6 +87,8 @@ namespace P64
     public:
       explicit Scene(uint16_t sceneId, Scene** ref);
       ~Scene();
+
+      CLASS_NO_COPY_MOVE(Scene);
 
       void update(float deltaTime);
       void draw(float deltaTime);

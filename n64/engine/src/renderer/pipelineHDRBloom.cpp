@@ -82,7 +82,8 @@ void P64::RenderPipelineHDRBloom::draw()
 {
   uint32_t frameIdxLast = (frameIdx+BUFF_COUNT-1) % BUFF_COUNT;
 
-  DrawLayer::draw(DrawLayer::LAYER_TRANS);
+  DrawLayer::draw3D();
+  DrawLayer::drawPtx();
 
   postProc[frameIdx].endFrame();
   assert(fb != nullptr);
@@ -108,7 +109,7 @@ void P64::RenderPipelineHDRBloom::draw()
     rdpq_tex_blit(&surfBlur, 0, 0, &param);
   }
 
-  DrawLayer::draw(DrawLayer::LAYER_2D);
+  DrawLayer::draw2D();
   DrawLayer::nextFrame();
 
   frameIdx = (frameIdx + 1) % BUFF_COUNT;

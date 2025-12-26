@@ -41,3 +41,9 @@ consteval float operator ""   _ms(long double x) { return static_cast<float>(x /
 
 consteval float operator ""    _s(unsigned long long x) { return static_cast<float>(x); }
 consteval float operator ""   _ms(unsigned long long x) { return static_cast<float>(x) / 1000.0f; }
+
+#define CLASS_NO_COPY_MOVE(cls) \
+  cls(const cls&) = delete; \
+  cls& operator=(const cls&) = delete; \
+  cls(cls&&) = delete; \
+  cls& operator=(cls&&) = delete;

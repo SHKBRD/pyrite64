@@ -257,7 +257,7 @@ int main(int argc, char** argv)
     Editor::Main editorMain{ctx.gpu};
     Editor::Scene editorScene{};
 
-    ctx.project->getScenes().loadScene(1);
+    ctx.project->getScenes().loadScene(ctx.project->conf.sceneIdOnBoot);
     //Editor::Actions::call(Editor::Actions::Type::PROJECT_BUILD);
     //Editor::Actions::call(Editor::Actions::Type::GAME_RUN);
 

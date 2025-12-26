@@ -7,22 +7,31 @@
 #include <t3d/t3d.h>
 #include <t3d/t3dmath.h>
 
+#include "lib/types.h"
+
 namespace P64
 {
   struct Camera
   {
-    T3DViewport viewports[3]{};
+    T3DViewport viewports{};
+    fm_vec3_t up{0,1,0};
     fm_vec3_t pos{};
     fm_vec3_t target{};
     float fov{};
     float near{};
     float far{};
 
-    uint8_t vpIdx{0};
     uint8_t needsProjUpdate{false};
+
+    Camera() = default;
+    CLASS_NO_COPY_MOVE(Camera);
 
     void update(float deltaTime);
     void attach();
+
+    void setUp(fm_vec3_t newUp) {
+      up = newUp;
+    }
 
     void setPos(fm_vec3_t newPos) {
       pos = newPos;

@@ -12,6 +12,11 @@
 #include "../../utils/jsonBuilder.h"
 #include "../../utils/logger.h"
 
+#define __LIBDRAGON_N64SYS_H 1
+#define PhysicalAddr(a) (uint64_t)(a)
+#include "include/rdpq_macros.h"
+#include "include/rdpq_mode.h"
+
 namespace
 {
   constinit uint64_t nextUUID{1};
@@ -20,15 +25,26 @@ namespace
 
 std::string Project::SceneConf::serialize() const {
 
+  auto writeLayer = [](Utils::JSON::Builder &b, const LayerConf &layer) {
+    b.set(layer.name);
+    b.set(layer.depthCompare);
+    b.set(layer.depthWrite);
+    b.set(layer.blender);
+  };
+
   Utils::JSON::Builder builder{};
-  builder.set(name);
-  builder.set("fbWidth", fbWidth);
-  builder.set("fbHeight", fbHeight);
-  builder.set("fbFormat", fbFormat);
-  builder.set("clearColor", clearColor);
-  builder.set(doClearColor);
-  builder.set(doClearDepth);
-  builder.set(renderPipeline);
+  builder.set(name)
+    .set("fbWidth", fbWidth)
+    .set("fbHeight", fbHeight)
+    .set("fbFormat", fbFormat)
+    .set("clearColor", clearColor)
+    .set(doClearColor)
+    .set(doClearDepth)
+    .set(renderPipeline)
+    .setArray<LayerConf>("layers3D", layers3D, writeLayer)
+    .setArray<LayerConf>("layersPtx", layersPtx, writeLayer)
+    .setArray<LayerConf>("layers2D", layers2D, writeLayer);
+
   return builder.toString();
 }
 
@@ -202,6 +218,32 @@ std::string Project::Scene::serialize() {
     + "}\n";
 }
 
+void Project::Scene::resetLayers()
+{
+  conf.layers3D.clear();
+  conf.layersPtx.clear();
+  conf.layers2D.clear();
+
+  LayerConf layer{};
+  layer.name.value = "3D Opaque";
+  layer.depthCompare.value = true;
+  layer.depthWrite.value = true;
+  layer.blender.value = 0;
+  conf.layers3D.push_back(layer);
+
+  layer.name.value = "3D Transp.";
+  layer.depthCompare.value = true;
+  layer.depthWrite.value = false;
+  layer.blender.value = RDPQ_BLENDER_MULTIPLY;
+  conf.layers3D.push_back(layer);
+
+  layer.name.value = "2D";
+  layer.depthCompare.value = false;
+  layer.depthWrite.value = false;
+  layer.blender.value = 0;
+  conf.layers2D.push_back(layer);
+}
+
 void Project::Scene::deserialize(const std::string &data)
 {
   if(data.empty())return;
@@ -219,6 +261,23 @@ void Project::Scene::deserialize(const std::string &data)
     Utils::JSON::readProp(docConf, conf.doClearColor);
     Utils::JSON::readProp(docConf, conf.doClearDepth);
     Utils::JSON::readProp(docConf, conf.renderPipeline);
+
+    auto readLayer = [](const simdjson::simdjson_result<simdjson::dom::object>& dom) {
+      LayerConf layer{};
+      Utils::JSON::readProp(dom, layer.name);
+      Utils::JSON::readProp(dom, layer.depthCompare, true);
+      Utils::JSON::readProp(dom, layer.depthWrite, true);
+      Utils::JSON::readProp(dom, layer.blender);
+      return layer;
+    };
+
+    conf.layers3D  = Utils::JSON::readArray<LayerConf>(docConf, "layers3D", readLayer);
+    conf.layersPtx = Utils::JSON::readArray<LayerConf>(docConf, "layersPtx", readLayer);
+    conf.layers2D  = Utils::JSON::readArray<LayerConf>(docConf, "layers2D", readLayer);
+
+    if(conf.layers3D.empty()) {
+      resetLayers();
+    }
   }
 
   removeAllObjects();

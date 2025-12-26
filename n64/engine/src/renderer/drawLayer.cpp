@@ -19,17 +19,22 @@ namespace
   };
 
   constexpr uint32_t LAYER_BUFFER_COUNT = 3;
-  constexpr uint32_t LAYER_BUFFER_WORDS = 2048;
+  constexpr uint32_t LAYER_BUFFER_WORDS = 1024;
   std::vector<std::array<Layer, LAYER_BUFFER_COUNT>> layers{};
+
+  constinit P64::DrawLayer::Setup *layerSetup{};
 
   constinit volatile uint32_t* layerMem{nullptr};
   constinit uint8_t frameIdx{0};
   constinit uint8_t currLayerIdx{0};
 }
 
-void P64::DrawLayer::init(uint32_t layerCount)
+void P64::DrawLayer::init(Setup &setup)
 {
-  assert(layerMem == nullptr);
+  reset();
+  layerSetup = &setup;
+  uint32_t layerCount = setup.layerCount3D + setup.layerCountPtx + setup.layerCount2D;
+  assert(layerCount > 0);
 
   currLayerIdx = 0;
   layers = {};
@@ -72,20 +77,60 @@ void P64::DrawLayer::use(uint32_t idx)
   currLayerIdx = idx;
 }
 
-void P64::DrawLayer::drawAll()
+void P64::DrawLayer::usePtx(uint32_t idx)
 {
-  for(auto &layer : layers) {
-    LD::RSPQ::exec(layer[frameIdx].pointer, layer[frameIdx].current);
-  }
+  use(idx + layerSetup->layerCount3D);
+}
+
+void P64::DrawLayer::use2D(uint32_t idx)
+{
+  use(idx + layerSetup->layerCount3D + layerSetup->layerCountPtx);
 }
 
 void P64::DrawLayer::draw(uint32_t layerIdx)
 {
-  assertf(layerIdx != 0, "Layer 0 is drawn in real-time");
-  assertf(layerIdx - 1 < layers.size(), "Invalid layer index %lu", layerIdx);
+  auto &setup = layerSetup->layerConf[layerIdx];
+  rdpq_mode_begin();
+    rdpq_mode_zbuf(
+      setup.flags & Conf::FLAG_Z_COMPARE,
+      setup.flags & Conf::FLAG_Z_WRITE
+    );
+    rdpq_mode_blender(setup.blender);
+  rdpq_mode_end();
+
+  if(layerIdx == 0)return;
+  assertf(layerIdx-1 < layers.size(), "Invalid layer index %lu", layerIdx);
 
   auto &layer = layers[layerIdx-1];
   LD::RSPQ::exec(layer[frameIdx].pointer, layer[frameIdx].current);
+}
+
+void P64::DrawLayer::draw3D()
+{
+  for(int i=1; i<layerSetup->layerCount3D; ++i) {
+    draw(i);
+  }
+}
+
+void P64::DrawLayer::drawPtx()
+{
+  int idxStart = layerSetup->layerCount3D;
+  for(int i=0; i<layerSetup->layerCountPtx; ++i) {
+    draw(idxStart + i);
+  }
+}
+
+void P64::DrawLayer::draw2D()
+{
+  rdpq_sync_pipe();
+  rdpq_sync_load();
+  rdpq_sync_tile();
+  rdpq_set_mode_standard();
+
+  int idxStart = layerSetup->layerCount3D + layerSetup->layerCountPtx;
+  for(int i=0; i<layerSetup->layerCount2D; ++i) {
+    draw(idxStart + i);
+  }
 }
 
 void P64::DrawLayer::nextFrame()
@@ -98,4 +143,12 @@ void P64::DrawLayer::nextFrame()
     // @TODO: is this needed?
     sys_hw_memset64((void*)layer[frameIdx].pointer, 0, LAYER_BUFFER_WORDS * sizeof(uint32_t));
   }
+}
+
+void P64::DrawLayer::reset()
+{
+  if(layerMem)free_uncached((void*)layerMem);
+  layerMem = nullptr;
+  layerSetup = nullptr;
+  currLayerIdx = 0;
 }

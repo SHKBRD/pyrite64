@@ -38,6 +38,11 @@ void P64::RenderPipelineBigTex::init()
   BigTex::ucodeInit();
   fbs = BigTex::allocBuffers();
 
+  /*
+  heap_stats_t h;
+  sys_get_heap_stats(&h);
+  debugf("BigTex Heap - used: %d bytes, free: %d bytes\n", h.used, h.total - h.used);
+*/
   VI::SwapChain::setFrameBuffers(fbs.color);
 
   VI::SwapChain::setDrawPass([this](surface_t *surf, uint32_t fbIndex, auto done) {
@@ -51,7 +56,7 @@ void P64::RenderPipelineBigTex::init()
 
 P64::RenderPipelineBigTex::~RenderPipelineBigTex()
 {
-  BigTex::freeBuffers();
+  BigTex::freeBuffers(fbs);
   BigTex::ucodeDestroy();
 }
 
@@ -81,7 +86,7 @@ void P64::RenderPipelineBigTex::preDraw()
 void P64::RenderPipelineBigTex::draw()
 {
   uint32_t frameIdxLast = (frameIdx + 2) % 3;
-  DrawLayer::draw(DrawLayer::LAYER_TRANS);
+  //DrawLayer::draw(DrawLayer::LAYER_TRANS);
 
   rdpq_sync_pipe();
   rdpq_mode_zbuf(false, false);
@@ -137,7 +142,9 @@ void P64::RenderPipelineBigTex::draw()
   ticks = get_ticks() - ticks;
   //debugf("Time: %lldus\n", TICKS_TO_US(ticks));
 
-  DrawLayer::draw(DrawLayer::LAYER_2D);
+  DrawLayer::draw3D(); // @TODO: split to get 3D after PP
+  DrawLayer::drawPtx();
+  DrawLayer::draw2D();
   DrawLayer::nextFrame();
 
   frameIdx = (frameIdx + 1) % 3;

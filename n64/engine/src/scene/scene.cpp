@@ -39,6 +39,8 @@ P64::Scene::Scene(uint16_t sceneId, Scene** ref)
 
   loadSceneConfig();
 
+  DrawLayer::init(conf.layerSetup);
+
   switch(conf.pipeline)
   {
     case SceneConf::Pipeline::DEFAULT    : renderPipeline = new RenderPipelineDefault(*this);  break;
@@ -92,6 +94,7 @@ void P64::Scene::update(float deltaTime)
   lighting.reset();
 
   camMain = cameras[0];
+  //debugf("cam %p: %d | %f\n", camMain, cameras.size(), (double)camMain->pos.z);
 
   collScene.update(deltaTime);
 
@@ -152,6 +155,7 @@ void P64::Scene::update(float deltaTime)
 void P64::Scene::draw([[maybe_unused]] float deltaTime)
 {
   renderPipeline->preDraw();
+  DrawLayer::draw(0);
 
   // 3D Pass, for every active camera
   for(auto &cam : cameras)
@@ -164,8 +168,10 @@ void P64::Scene::draw([[maybe_unused]] float deltaTime)
 
     GlobalScript::callHooks(GlobalScript::HookType::SCENE_PRE_DRAW_3D);
 
+    //debugf("Drawing objects:\n");
     for(auto obj : objects)
     {
+      //debugf(" - %d\n", obj->id);
       if(!obj->isEnabled())continue;
       auto compRefs = obj->getCompRefs();
 
@@ -183,7 +189,7 @@ void P64::Scene::draw([[maybe_unused]] float deltaTime)
     t3d_matrix_pop(1);
   }
 
-  DrawLayer::use(DrawLayer::LAYER_2D);
+  DrawLayer::use(conf.layerSetup.layerCount3D + conf.layerSetup.layerCountPtx);
     Debug::printStart();
     Debug::printf(16, 16, "%.2f\n", (double)VI::SwapChain::getFPS());
 

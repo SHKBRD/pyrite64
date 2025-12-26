@@ -178,6 +178,7 @@ add_executable(p64editor src/main.cpp
         src/build/tools/bci.h
         src/build/audioBuilder.cpp
         src/project/component/types/compAudio2d.cpp
+        src/editor/pages/parts/layerInspector.cpp
 )
 
 target_include_directories(p64editor PRIVATE
@@ -191,6 +192,7 @@ target_include_directories(p64editor PRIVATE
     vendored/glm
     vendored/ImGuizmo
     vendored/tiny3d/tools/gltf_importer/src/lib
+    vendored/libdragon
     n64
 )
 

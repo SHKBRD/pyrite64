@@ -8,16 +8,13 @@
 
 void P64::Camera::update([[maybe_unused]] float deltaTime)
 {
-  vpIdx = (vpIdx + 1) % 3;
-  auto &vp = viewports[vpIdx];
-
   //if(needsProjUpdate) {
-    t3d_viewport_set_projection(vp, fov, near, far);
+    t3d_viewport_set_projection(viewports, fov, near, far);
     // vp._normScaleW = 0.001f;
     //needsProjUpdate = false;
   //}
 
-  t3d_viewport_look_at(vp, pos, target, fm_vec3_t{{0, 1, 0}});
+  t3d_viewport_look_at(viewports, pos, target, up);
 
 /*  fm_vec3_t up{{0, 1, 0}};
   t3d_mat4_look_at(vp.matCamera, pos, target, up);
@@ -29,13 +26,13 @@ void P64::Camera::update([[maybe_unused]] float deltaTime)
 }
 
 void P64::Camera::attach() {
-  t3d_viewport_attach(viewports[vpIdx]);
+  t3d_viewport_attach(viewports);
 }
 
 fm_vec3_t P64::Camera::getScreenPos(const fm_vec3_t &worldPos)
 {
   fm_vec3_t res{};
-  t3d_viewport_calc_viewspace_pos(viewports[vpIdx], res, worldPos);
+  t3d_viewport_calc_viewspace_pos(viewports, res, worldPos);
   return res;
 }
 

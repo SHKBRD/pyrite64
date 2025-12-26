@@ -5,6 +5,7 @@
 #pragma once
 #include "parts/assetInspector.h"
 #include "parts/assetsBrowser.h"
+#include "parts/layerInspector.h"
 #include "parts/logWindow.h"
 #include "parts/objectInspector.h"
 #include "parts/projectSettings.h"
@@ -24,6 +25,7 @@ namespace Editor
       AssetsBrowser assetsBrowser{};
       AssetInspector assetInspector{};
       SceneInspector sceneInspector{};
+      LayerInspector layerInspector{};
       ObjectInspector objectInspector{};
       LogWindow logWindow{};
       SceneGraph sceneGraph{};

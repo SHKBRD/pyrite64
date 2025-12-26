@@ -193,6 +193,11 @@ void Editor::AssetsBrowser::draw() {
       }
 
       if(isSelected)ImGui::PopStyleColor(2);
+
+      if(ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+      {
+        ImGui::SetTooltip("Scene: %s\nID: %d", scene.name.c_str(), scene.id);
+      }
     }
   }
 

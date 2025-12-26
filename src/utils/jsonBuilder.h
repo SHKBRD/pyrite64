@@ -21,13 +21,14 @@ namespace Utils::JSON
       }
 
       template<typename T>
-      void set(const std::string &key, T value) {
+      Builder& set(const std::string &key, T value) {
         if (hasData) {
           builder.append_comma();
           builder.append_raw("\n");
         }
         builder.append_key_value(key, value);
         hasData = true;
+        return *this;
       }
 
       template<typename PROP>
@@ -64,7 +65,7 @@ namespace Utils::JSON
       }
 
 
-      void set(const std::string &key, const glm::vec4 &vec) {
+      Builder& set(const std::string &key, const glm::vec4 &vec) {
         if (hasData)builder.append_comma();
 
         builder.escape_and_append_with_quotes(key);
@@ -77,6 +78,7 @@ namespace Utils::JSON
         builder.end_array();
 
         hasData = true;
+        return *this;
       }
 
       void set(const std::string &key, const glm::quat &vec) {
@@ -100,6 +102,30 @@ namespace Utils::JSON
         builder.append_colon();
         builder.append_raw(build.toString());
         hasData = true;
+      }
+
+      template<typename T>
+      Builder& setArray(const std::string &key, const std::vector<T> &parts, std::function<void(Builder&, const T&)> cb) {
+        if (hasData)builder.append_comma();
+        builder.escape_and_append_with_quotes(key);
+        builder.append_colon();
+        builder.start_array();
+
+        bool needsComma = false;
+        for (auto &part : parts) {
+          if (needsComma) {
+            builder.append_comma();
+            builder.append_raw("\n");
+          }
+          Builder childBuilder{};
+          cb(childBuilder, part);
+          builder.append_raw(childBuilder.toString());
+          needsComma = true;
+        }
+        builder.end_array();
+
+        hasData = true;
+        return *this;
       }
 
       void setRaw(const std::string &key, const std::vector<std::string> &parts) {

@@ -24,33 +24,13 @@ namespace
   constexpr uint32_t FLAG_CLR_DEPTH = 1 << 0;
   constexpr uint32_t FLAG_CLR_COLOR = 1 << 1;
   constexpr uint32_t FLAG_SCR_32BIT = 1 << 2;
-}
 
-void Build::buildScene(Project::Project &project, const Project::SceneEntry &scene, SceneCtx &ctx)
-{
-  std::string fileNameScene = "s" + Utils::padLeft(std::to_string(scene.id), '0', 4);
-  std::string fileNameObj = fileNameScene + "o";
-
-  std::unique_ptr<Project::Scene> sc{new Project::Scene(scene.id, project.getPath())};
-
-  auto fsDataPath = fs::absolute(fs::path{project.getPath()} / "filesystem" / "p64");
-
-  uint32_t sceneFlags = 0;
-  uint32_t objCount = sc->objectsMap.size();
-
-  if (sc->conf.doClearDepth.value)sceneFlags |= FLAG_CLR_DEPTH;
-  if (sc->conf.doClearColor.value)sceneFlags |= FLAG_CLR_COLOR;
-  if (sc->conf.fbFormat)sceneFlags |= FLAG_SCR_32BIT;
-
-  ctx.fileObj = {};
-  for (auto objEntry : sc->objectsMap)
+  void writeObject(Build::SceneCtx &ctx, Project::Object &obj)
   {
-    auto &obj = *objEntry.second;
-
     auto srcObj = &obj;
     if(obj.isPrefabInstance())
     {
-      auto prefab = project.getAssets().getPrefabByUUID(srcObj->uuidPrefab.value);
+      auto prefab = ctx.project->getAssets().getPrefabByUUID(srcObj->uuidPrefab.value);
       if(prefab)srcObj = &prefab->obj;
     }
 
@@ -87,13 +67,40 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
       assert(size < 256);
 
       ctx.fileObj.posPush(compPos);
-        ctx.fileObj.write<uint8_t>(comp.id);
-        ctx.fileObj.write<uint8_t>(size);
+      ctx.fileObj.write<uint8_t>(comp.id);
+      ctx.fileObj.write<uint8_t>(size);
       ctx.fileObj.posPop();
       //ctx.fileObj.write<uint16_t>(comp.id);
     }
 
     ctx.fileObj.write<uint32_t>(0);
+
+    for (const auto &child : obj.children) {
+      writeObject(ctx, *child);
+    }
+  }
+}
+
+void Build::buildScene(Project::Project &project, const Project::SceneEntry &scene, SceneCtx &ctx)
+{
+  std::string fileNameScene = "s" + Utils::padLeft(std::to_string(scene.id), '0', 4);
+  std::string fileNameObj = fileNameScene + "o";
+
+  std::unique_ptr<Project::Scene> sc{new Project::Scene(scene.id, project.getPath())};
+
+  auto fsDataPath = fs::absolute(fs::path{project.getPath()} / "filesystem" / "p64");
+
+  uint32_t sceneFlags = 0;
+  uint32_t objCount = sc->objectsMap.size();
+
+  if (sc->conf.doClearDepth.value)sceneFlags |= FLAG_CLR_DEPTH;
+  if (sc->conf.doClearColor.value)sceneFlags |= FLAG_CLR_COLOR;
+  if (sc->conf.fbFormat)sceneFlags |= FLAG_SCR_32BIT;
+
+  ctx.fileObj = {};
+  auto &rootObj = sc->getRootObject();
+  for (const auto &child : rootObj.children) {
+    writeObject(ctx, *child);
   }
 
   ctx.fileObj.writeToFile(fsDataPath / fileNameObj);
@@ -104,7 +111,30 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
   ctx.fileScene.write(sceneFlags);
   ctx.fileScene.writeRGBA(sc->conf.clearColor);
   ctx.fileScene.write(objCount);
+
   ctx.fileScene.write<uint8_t>(sc->conf.renderPipeline.value);
+  ctx.fileScene.write<uint8_t>(0); // padding
+  ctx.fileScene.write<uint8_t>(0); // padding
+  ctx.fileScene.write<uint8_t>(0); // padding
+
+  // Layer::Setup
+  ctx.fileScene.write<uint8_t>(sc->conf.layers3D.size());
+  ctx.fileScene.write<uint8_t>(sc->conf.layersPtx.size());
+  ctx.fileScene.write<uint8_t>(sc->conf.layers2D.size());
+  ctx.fileScene.write<uint8_t>(0); // padding
+
+  auto writeLayer = [&ctx](const Project::LayerConf &layer) {
+    uint32_t flags = 0;
+    if(layer.depthWrite.value)flags |= (1 << 0);
+    if(layer.depthCompare.value)flags |= (1 << 1);
+
+    ctx.fileScene.write<uint32_t>(flags);
+    ctx.fileScene.write<uint32_t>(layer.blender.value);
+  };
+
+  for(const auto &layer : sc->conf.layers3D)writeLayer(layer);
+  for(const auto &layer : sc->conf.layersPtx)writeLayer(layer);
+  for(const auto &layer : sc->conf.layers2D)writeLayer(layer);
 
   ctx.fileScene.align(4);
   ctx.fileScene.writeToFile(fsDataPath / fileNameScene);

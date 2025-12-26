@@ -160,6 +160,27 @@ namespace Utils::JSON
     return res;
   }
 
+  template<typename RES, typename T>
+  inline std::vector<RES> readArray(
+    const simdjson::simdjson_result<T> &el,
+    const std::string &key,
+    std::function<RES(const simdjson::simdjson_result<simdjson::dom::object>&)> cb
+  ) {
+    std::vector<RES> result{};
+    auto val = el[key];
+    if (val.error() != simdjson::SUCCESS) {
+      return result;
+    }
+    auto arr = val.get_array();
+    if (arr.error() != simdjson::SUCCESS) {
+      return result;
+    }
+    for (auto item : *arr) {
+      result.push_back(cb(item.get_object()));
+    }
+    return result;
+  }
+
   template<typename T, typename PROP>
   inline void readProp(const simdjson::simdjson_result<T> &el, Property<PROP> &prop, const PROP& defValue = PROP{}) {
     PROP val{};

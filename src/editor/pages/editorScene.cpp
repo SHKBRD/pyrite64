@@ -70,6 +70,7 @@ void Editor::Scene::draw()
     //ImGui::DockBuilderDockWindow("Project", dockLeftID);
     ImGui::DockBuilderDockWindow("Scene", dockLeftID);
     ImGui::DockBuilderDockWindow("Graph", dockLeftID);
+    ImGui::DockBuilderDockWindow("Layers", dockLeftID);
 
     // Right
     ImGui::DockBuilderDockWindow("Asset", dockRightID);
@@ -102,6 +103,10 @@ void Editor::Scene::draw()
   ImGui::End();
 
   if (ctx.project->getScenes().getLoadedScene()) {
+
+    ImGui::Begin("Layers");
+    layerInspector.draw();
+    ImGui::End();
 
     ImGui::Begin("Graph");
       sceneGraph.draw();

@@ -6,6 +6,11 @@
 #include "lib/mips.h"
 #include "vi/swapChain.h"
 
+extern "C" {
+  // "libdragon/system_internal.h"
+  void* sbrk_top(int incr);
+}
+
 namespace
 {
   int new_display_get_width() {
@@ -59,4 +64,13 @@ void P64::LD::init()
   DISABLE_FN(display_get_num_buffers);
   DISABLE_FN(display_get_current_framebuffer);
   DISABLE_FN(display_get_zbuf);
+}
+
+void* P64::LD::sbrkSetTop(void* newTop)
+{
+  void* currentTop = sbrk_top(0);
+  int32_t diff = (char*)currentTop - (char*)newTop;
+  void* result = sbrk_top(diff);
+  assertf(newTop == result, "sbrkSetTop failed: %p != %p", newTop, result);
+  return currentTop;
 }

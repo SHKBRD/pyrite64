@@ -12,6 +12,14 @@
 
 namespace Project
 {
+  struct LayerConf
+  {
+    PROP_STRING(name);
+    PROP_BOOL(depthCompare);
+    PROP_BOOL(depthWrite);
+    PROP_U32(blender);
+  };
+
   struct SceneConf
   {
     PROP_STRING(name);
@@ -22,6 +30,10 @@ namespace Project
     PROP_BOOL(doClearColor);
     PROP_BOOL(doClearDepth);
     PROP_S32(renderPipeline);
+
+    std::vector<LayerConf> layers3D{};
+    std::vector<LayerConf> layersPtx{};
+    std::vector<LayerConf> layers2D{};
 
     std::string serialize() const;
   };
@@ -67,6 +79,9 @@ namespace Project
       uint32_t createPrefabFromObject(uint32_t uuid);
 
       std::string serialize();
+
+      void resetLayers();
+
       void deserialize(const std::string &data);
   };
 }

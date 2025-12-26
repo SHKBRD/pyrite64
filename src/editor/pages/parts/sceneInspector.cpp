@@ -29,14 +29,27 @@ void Editor::SceneInspector::draw() {
     ImTable::end();
   }
 
+  bool fbDisabled = false;
+  if(scene->conf.renderPipeline.value != 0)
+  {
+    // HDR/Bloom and bigtex both need those specific settings to work:
+    scene->conf.fbWidth = 320;
+    scene->conf.fbHeight = 240;
+    scene->conf.fbFormat = 0;
+    fbDisabled = true;
+  }
+
   if (ImGui::CollapsingHeader("Framebuffer", ImGuiTreeNodeFlags_DefaultOpen)) {
     ImTable::start("Framebuffer");
 
+    if(fbDisabled)ImGui::BeginDisabled();
     ImTable::add("Width", scene->conf.fbWidth);
     ImTable::add("Height", scene->conf.fbHeight);
 
     constexpr const char* const FORMATS[] = {"RGBA16","RGBA32"};
     ImTable::addComboBox("Format", scene->conf.fbFormat, FORMATS, 2);
+
+    if(fbDisabled)ImGui::EndDisabled();
 
     ImTable::addColor("Color", scene->conf.clearColor, false);
     scene->conf.clearColor.a = 1.0f;
