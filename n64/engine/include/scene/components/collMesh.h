@@ -25,6 +25,8 @@ namespace P64::Comp
 
     static void initDelete([[maybe_unused]] Object& obj, CollMesh* data, uint16_t* initData);
 
+    static void onEvent(Object &obj, CollMesh* data, const ObjectEvent &event);
+
     static void update(Object& obj, CollMesh* data, float deltaTime) {
       data->meshInstance.pos = obj.pos;
       data->meshInstance.scale = obj.scale;

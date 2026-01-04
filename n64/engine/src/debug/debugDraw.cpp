@@ -8,6 +8,7 @@
 
 namespace
 {
+  constexpr uint32_t MAX_LINE_COUNT = 2048;
   struct Line {
     fm_vec3_t a{};
     fm_vec3_t b{};
@@ -58,7 +59,7 @@ void Debug::destroy() {
 }
 
 void Debug::drawLine(const fm_vec3_t &a, const fm_vec3_t &b, color_t color) {
-  if(lines.size() > 1000)return;
+  if(lines.size() > MAX_LINE_COUNT)return;
   lines.push_back({a, b, color_to_packed16(color), 0});
 }
 

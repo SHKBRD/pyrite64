@@ -8,6 +8,7 @@
 
 #include "event.h"
 #include "lighting.h"
+#include "object.h"
 #include "collision/scene.h"
 #include "lib/types.h"
 #include "renderer/drawLayer.h"
@@ -164,6 +165,26 @@ namespace P64
       void removeObject(Object &obj);
 
       Object* getObjectById(uint16_t objId) const;
+
+      /**
+       * Iterates over all direct children of the given parent object ID.
+       * If you need nested iteration, call this function recursively.
+       *
+       * Note: This function is intentionally a template with a callback.
+       * Doing so generates the same ASM as a direct loops with an if+continue,
+       * whereas iterators or std::view performs worse.
+       *
+       * @tparam F
+       * @param parentId object id of the parent
+       * @param f callback function, takes Object* as argument
+       */
+      template<typename F>
+      void iterObjectChildren(uint16_t parentId, F&& f) const {
+        for (auto o : objects) {
+          if(o->group != parentId)continue;
+          f(o);
+        }
+      }
 
       void setGroupEnabled(uint16_t groupId, bool enabled) const;
 

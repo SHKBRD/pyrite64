@@ -30,6 +30,7 @@ namespace Project::Component::CollBody
     PROP_VEC3(offset);
     PROP_S32(type);
     PROP_BOOL(isTrigger);
+    PROP_BOOL(isFixed);
     PROP_U32(maskRead);
     PROP_U32(maskWrite);
   };
@@ -46,6 +47,7 @@ namespace Project::Component::CollBody
       .set(data.offset)
       .set(data.type)
       .set(data.isTrigger)
+      .set(data.isFixed)
       .set(data.maskRead)
       .set(data.maskWrite)
       .toString();
@@ -57,6 +59,7 @@ namespace Project::Component::CollBody
     Utils::JSON::readProp(doc, data->offset);
     Utils::JSON::readProp(doc, data->type);
     Utils::JSON::readProp(doc, data->isTrigger, false);
+    Utils::JSON::readProp(doc, data->isFixed, false);
     Utils::JSON::readProp(doc, data->maskRead, 0xFFu);
     Utils::JSON::readProp(doc, data->maskWrite, 0xFFu);
     return data;
@@ -71,6 +74,9 @@ namespace Project::Component::CollBody
     uint8_t flags = data.type.resolve(obj.propOverrides) == TYPE_BOX ? Coll::BCSFlags::SHAPE_BOX : 0;
     if(data.isTrigger.resolve(obj.propOverrides)) {
       flags |= Coll::BCSFlags::TRIGGER;
+    }
+    if(data.isFixed.resolve(obj.propOverrides)) {
+      flags |= Coll::BCSFlags::FIXED_XYZ;
     }
 
     ctx.fileObj.write<uint8_t>(flags);
@@ -97,6 +103,7 @@ namespace Project::Component::CollBody
       }
       ImTable::addObjProp("Offset", data.offset);
       ImTable::addObjProp("Trigger", data.isTrigger);
+      ImTable::addObjProp("Fixed-Pos", data.isFixed);
       ImTable::addBitMask8("Mask Read", data.maskRead.resolve(obj.propOverrides));
       ImTable::addBitMask8("Mask Write", data.maskWrite.resolve(obj.propOverrides));
 
@@ -108,8 +115,9 @@ namespace Project::Component::CollBody
   {
     Data &data = *static_cast<Data*>(entry.data.get());
     auto &objPos = obj.pos.resolve(obj.propOverrides);
+    auto &objScale = obj.scale.resolve(obj.propOverrides);
 
-    glm::vec3 halfExt = data.halfExtend.resolve(obj.propOverrides);
+    glm::vec3 halfExt = data.halfExtend.resolve(obj.propOverrides) * objScale;
     glm::vec3 center = objPos + data.offset.resolve(obj.propOverrides);
     auto type = data.type.resolve(obj.propOverrides);
 

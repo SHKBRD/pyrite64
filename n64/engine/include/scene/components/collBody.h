@@ -18,6 +18,7 @@ namespace P64::Comp
 
     Coll::BCS bcs{};
     fm_vec3_t offset{};
+    fm_vec3_t orgScale{};
 
     static uint32_t getAllocSize([[maybe_unused]] uint16_t* initData)
     {
@@ -26,13 +27,13 @@ namespace P64::Comp
 
     static void initDelete([[maybe_unused]] Object& obj, CollBody* data, void* initData);
 
+    static void onEvent(Object& obj, CollBody* data, const ObjectEvent& event);
+
     static void update(Object& obj, CollBody* data, float deltaTime)
     {
+      // @TODO: only update on changes
       obj.pos = data->bcs.center - data->offset;
-      //data->meshInstance.pos = obj.pos;
-      //data->meshInstance.rot = {};
-      //data->meshInstance.scale = obj.scale;
-      //bcs.center = obj.pos + data->offset;
+      data->bcs.halfExtend = data->orgScale * obj.scale;
     }
   };
 }

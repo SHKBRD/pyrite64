@@ -36,14 +36,26 @@ namespace P64::Comp
     new(data) CollBody();
 
     data->offset = initData->offset;
+    data->orgScale = initData->halfExtend;
+
     data->bcs = {
       .center = obj.pos + data->offset,
-      .halfExtend = initData->halfExtend,
+      .halfExtend = data->orgScale * obj.scale,
       .objectId = obj.id,
       .maskRead = initData->maskRead,
       .maskWrite = initData->maskWrite,
       .flags = initData->flags,
     };
     coll.registerBCS(&data->bcs);
+  }
+
+  void CollBody::onEvent(Object &obj, CollBody* data, const ObjectEvent &event)
+  {
+    if(event.type == EVENT_TYPE_DISABLE) {
+      return obj.getScene().getCollision().unregisterBCS(&data->bcs);
+    }
+    if(event.type == EVENT_TYPE_ENABLE) {
+      return obj.getScene().getCollision().registerBCS(&data->bcs);
+    }
   }
 }

@@ -15,8 +15,9 @@ namespace P64
    * This the main struct used in scenes to represent all sorts of entities.
    * Objects can have multiple components attached to them, which provide functionality
    * for running game logic and drawing things.
+   *
    * The exact makeup is set up in the editor, and loaded during a scene load.
-   * Dynamic creation at runtime is only possible through prefabs. (<- @TODO)
+   * Dynamic creation at runtime is only possible through prefabs.
    */
   class Object
   {
@@ -36,8 +37,6 @@ namespace P64
       uint16_t group{};
       uint16_t flags{};
       uint16_t compCount{0};
-
-      uint32_t _padding{};
 
       // extra data, is overlapping with component data if unused
       fm_quat_t rot{};
@@ -110,8 +109,15 @@ namespace P64
         return (flags & ObjectFlags::ACTIVE) == ObjectFlags::ACTIVE;
       }
 
-      [[nodiscard]] bool isGroup() const {
-        return (flags & ObjectFlags::IS_GROUP);
+      /**
+       * Changes the state of the object to be enabled or disabled.
+       * Prefer this over changing flags directly, as components may need to be notified.
+       * @param isEnabled true to enable, false to disable
+       */
+      void setEnabled(bool isEnabled);
+
+      [[nodiscard]] bool hasChildren() const {
+        return (flags & ObjectFlags::HAS_CHILDREN);
       }
 
       /**
@@ -124,6 +130,43 @@ namespace P64
       static Scene& getScene()
       {
         return SceneManager::getCurrent();
+      }
+
+      /**
+       * Iterates over all direct children of the object.
+       * If you need nested iteration, call this function recursively.
+       *
+       * Example:
+       * \code{.cpp}
+       * obj.iterChildren(obj.id, [](Object* child) {
+       *   child->setEnabled(true);
+       * });
+       * \endcode
+       *
+       * Note: This function is intentionally a template with a callback.
+       * Doing so generates the same ASM as a direct loops with an if+continue,
+       * whereas iterators or std::view performs worse.
+       * Template params are deduced automatically.
+       *
+       * @param parentId object id of the parent
+       * @param f callback function, takes Object* as argument
+       */
+      template<typename F, typename SCENE = Scene>
+      static void iterChildren(uint16_t parentId, F&& f) {
+        const SCENE &sc = getScene();
+        sc.iterObjectChildren(parentId, f);
+      }
+
+      /**
+       * Returns the parent object of this object, or nullptr if none.
+       *
+       * @return pointer to parent object or nullptr
+       */
+      template<typename SCENE = Scene>
+      Object* getParent()
+      {
+        const SCENE &sc = getScene();
+        return sc.getObjectById(this->group);
       }
   };
 }

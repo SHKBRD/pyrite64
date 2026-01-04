@@ -165,7 +165,7 @@ void P64::Scene::loadScene() {
   // update groups
   for(auto obj : objects)
   {
-    if(obj->isGroup())
+    if(obj->hasChildren())
     {
       bool groupActive = obj->isSelfEnabled();
       debugf("Updating group %d | a:%d\n", obj->id, groupActive);

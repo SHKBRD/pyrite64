@@ -7,6 +7,7 @@
 #include "assets/assetManager.h"
 #include "scene/object.h"
 #include "scene/sceneManager.h"
+#include "scene/camera.h"
 
 namespace P64::Comp
 {

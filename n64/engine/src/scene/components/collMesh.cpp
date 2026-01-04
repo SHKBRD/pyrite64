@@ -15,10 +15,9 @@ namespace P64::Comp
 {
   void CollMesh::initDelete([[maybe_unused]] Object& obj, CollMesh* data, uint16_t* initData)
   {
-    auto &scene = SceneManager::getCurrent();
     if (initData == nullptr) {
       if(data->meshInstance.mesh) {
-        scene.getCollision().unregisterMesh(&data->meshInstance);
+        obj.getScene().getCollision().unregisterMesh(&data->meshInstance);
       }
 
       data->~CollMesh();
@@ -34,7 +33,17 @@ namespace P64::Comp
       data->meshInstance.pos = obj.pos;
       data->meshInstance.scale = obj.scale;
       data->meshInstance.mesh = Coll::Mesh::load(it.chunk);
-      scene.getCollision().registerMesh(&data->meshInstance);
+      obj.getScene().getCollision().registerMesh(&data->meshInstance);
+    }
+  }
+
+  void CollMesh::onEvent(Object &obj, CollMesh* data, const ObjectEvent &event)
+  {
+    if(event.type == EVENT_TYPE_DISABLE) {
+      return obj.getScene().getCollision().unregisterMesh(&data->meshInstance);
+    }
+    if(event.type == EVENT_TYPE_ENABLE) {
+      obj.getScene().getCollision().registerMesh(&data->meshInstance);
     }
   }
 }
