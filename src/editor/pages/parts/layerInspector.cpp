@@ -10,6 +10,7 @@
 
 #define __LIBDRAGON_N64SYS_H 1
 #define PhysicalAddr(a) (uint64_t)(a)
+#include "glm/ext/scalar_common.hpp"
 #include "include/rdpq_macros.h"
 #include "include/rdpq_mode.h"
 
@@ -54,6 +55,24 @@ namespace
           {RDPQ_BLENDER_ADDITIVE, "Additive"},
         };
         ImTable::addVecComboBox("Blending", blenders, layer.blender.value);
+
+        ImTable::addProp("Fog", layer.fog);
+        if(layer.fog.value)
+        {
+          std::vector<ImTable::ComboEntry> fogColorModes{
+              {1, "Clear-Color"},
+              {2, "Custom Color"},
+              {3, "Leave Unchanged"},
+            };
+          ImTable::addVecComboBox("Fog-Mode", fogColorModes, layer.fogColorMode.value);
+
+          if(layer.fogColorMode.value == 2) {
+            ImTable::addColor("Fog Color", layer.fogColor.value);
+          }
+
+          ImTable::addProp("Fog Min", layer.fogMin);
+          ImTable::addProp("Fog Max", layer.fogMax);
+        }
 
         ImTable::end();
         ImGui::Dummy({0, 2});

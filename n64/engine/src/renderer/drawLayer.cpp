@@ -10,6 +10,7 @@
 #include <t3d/tpx.h>
 
 #include "lib/logger.h"
+#include "scene/scene.h"
 
 namespace
 {
@@ -97,22 +98,20 @@ void P64::DrawLayer::draw(uint32_t layerIdx)
       setup.flags & Conf::FLAG_Z_WRITE
     );
     rdpq_mode_blender(setup.blender);
-
-    if(layerIdx == 0) {
-      rdpq_mode_fog(RDPQ_FOG_STANDARD);
-    } else {
-      rdpq_mode_fog(0);
-    }
-
+    rdpq_mode_fog((setup.fogMode != Conf::FogMode::NONE) ? RDPQ_FOG_STANDARD : 0);
   rdpq_mode_end();
 
-  if(layerIdx == 0)
+  if(setup.fogMode != Conf::FogMode::NONE)
   {
     t3d_fog_set_enabled(true);
-    t3d_fog_set_range(200, 450);
-    rdpq_set_fog_color({0xD3, 0xBB, 0x69, 0xFF});
-  } else
-  {
+    t3d_fog_set_range(setup.fogMin, setup.fogMax);
+
+    if(setup.fogMode == Conf::FogMode::CLEAR_COLOR) {
+      rdpq_set_fog_color(SceneManager::getCurrent().getConf().clearColor);
+    } else if(setup.fogMode == Conf::FogMode::CUSTOM_COLOR) {
+      rdpq_set_fog_color(setup.fogColor);
+    }
+  } else {
     t3d_fog_set_enabled(false);
   }
 
@@ -128,6 +127,7 @@ void P64::DrawLayer::draw(uint32_t layerIdx)
 void P64::DrawLayer::draw3D()
 {
   for(int i=1; i<layerSetup->layerCount3D; ++i) {
+    rdpq_sync_pipe();
     draw(i);
   }
 }
@@ -135,6 +135,8 @@ void P64::DrawLayer::draw3D()
 void P64::DrawLayer::drawPtx()
 {
   rdpq_sync_pipe();
+  rdpq_sync_load();
+  rdpq_sync_tile();
   rdpq_set_mode_standard();
 
   rdpq_mode_begin();

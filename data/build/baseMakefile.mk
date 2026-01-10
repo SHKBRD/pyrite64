@@ -64,6 +64,9 @@ clean:
 	rm -rf $(BUILD_DIR) $(ROM_NAME).z64
 	rm -rf filesystem
 
+cleanCode:
+	rm -rf $(BUILD_DIR) $(ROM_NAME).z64
+
 cleanP64: clean
 	rm -rf assets/p64/*
 

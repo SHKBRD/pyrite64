@@ -131,7 +131,6 @@ void Debug::Overlay::draw(P64::Scene &scene, surface_t* surf)
   Debug::draw(surf);
 
   auto btn = joypad_get_buttons_pressed(JOYPAD_PORT_1);
-  auto held = joypad_get_buttons_held(JOYPAD_PORT_1);
 
   if(menu.items.empty()) {
     addActionItem(menu, "Scenes", []([[maybe_unused]] auto &item) { showMenuScene = true; });

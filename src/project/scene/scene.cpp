@@ -29,6 +29,11 @@ std::string Project::SceneConf::serialize() const {
     b.set(layer.depthCompare);
     b.set(layer.depthWrite);
     b.set(layer.blender);
+    b.set(layer.fog);
+    b.set(layer.fogColorMode);
+    b.set(layer.fogColor);
+    b.set(layer.fogMin);
+    b.set(layer.fogMax);
   };
 
   Utils::JSON::Builder builder{};
@@ -279,6 +284,13 @@ void Project::Scene::deserialize(const std::string &data)
       Utils::JSON::readProp(dom, layer.depthCompare, true);
       Utils::JSON::readProp(dom, layer.depthWrite, true);
       Utils::JSON::readProp(dom, layer.blender);
+      Utils::JSON::readProp(dom, layer.fog, false);
+      Utils::JSON::readProp(dom, layer.fogColorMode, 0u);
+      Utils::JSON::readProp(dom, layer.fogColor);
+      Utils::JSON::readProp(dom, layer.fogMin, 0.0f);
+      Utils::JSON::readProp(dom, layer.fogMax, 0.0f);
+
+
       return layer;
     };
 

@@ -5,6 +5,8 @@
 #pragma once
 #include <cstdint>
 
+#include "scene/components/collBody.h"
+
 namespace P64::DrawLayer
 {
   struct Conf
@@ -12,8 +14,26 @@ namespace P64::DrawLayer
     static constexpr uint32_t FLAG_Z_WRITE = 1 << 0;
     static constexpr uint32_t FLAG_Z_COMPARE = 1 << 1;
 
+    enum class FogMode : uint8_t
+    {
+      NONE = 0,
+      CLEAR_COLOR,
+      CUSTOM_COLOR,
+      UNCHANGED_COLOR,
+    };
+
     uint32_t flags{};
     uint32_t blender{};
+
+    color_t fogColor{};
+    float fogMin{};
+    float fogMax{};
+    FogMode fogMode{};
+
+    uint8_t padding0{};
+    uint8_t padding1{};
+    uint8_t padding2{};
+
   };
 
   struct Setup

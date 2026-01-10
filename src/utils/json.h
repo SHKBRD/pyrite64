@@ -100,8 +100,8 @@ namespace Utils::JSON
   }
 
   template<typename T>
-  inline glm::vec4 readColor(const simdjson::simdjson_result<T> &el, const std::string &key) {
-    glm::vec4 col{};
+  inline glm::vec4 readColor(const simdjson::simdjson_result<T> &el, const std::string &key, const glm::vec4 &def = {}) {
+    glm::vec4 col = def;
     auto val = el[key];
     if (val.error() != simdjson::SUCCESS) {
       return col;

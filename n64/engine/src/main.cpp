@@ -48,7 +48,7 @@ int main()
   dfs_init(DFS_DEFAULT_LOCATION);
 
   rdpq_init();
-  // rdpq_debug_start();
+  //rdpq_debug_start();
 
   t3d_init({});
   tpx_init({});

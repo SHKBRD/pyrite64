@@ -18,6 +18,11 @@ namespace Project
     PROP_BOOL(depthCompare);
     PROP_BOOL(depthWrite);
     PROP_U32(blender);
+    PROP_BOOL(fog);
+    PROP_U32(fogColorMode);
+    PROP_VEC4(fogColor);
+    PROP_FLOAT(fogMin);
+    PROP_FLOAT(fogMax);
   };
 
   struct SceneConf

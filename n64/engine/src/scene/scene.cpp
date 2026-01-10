@@ -229,7 +229,7 @@ void P64::Scene::draw([[maybe_unused]] float deltaTime)
   }
 
   auto t = get_user_ticks();
-  DrawLayer::use(conf.layerSetup.layerCount3D + conf.layerSetup.layerCountPtx);
+  DrawLayer::use2D();
     GlobalScript::callHooks(GlobalScript::HookType::SCENE_DRAW_2D);
   DrawLayer::useDefault();
   ticksGlobalDraw += get_user_ticks() - t;

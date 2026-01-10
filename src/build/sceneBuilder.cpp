@@ -130,6 +130,16 @@ void Build::buildScene(Project::Project &project, const Project::SceneEntry &sce
 
     ctx.fileScene.write<uint32_t>(flags);
     ctx.fileScene.write<uint32_t>(layer.blender.value);
+
+    uint8_t fogMode = layer.fog.value ? layer.fogColorMode.value : 0;
+    ctx.fileScene.writeRGBA(layer.fogColor.value);
+    ctx.fileScene.write<float>(layer.fogMin.value);
+    ctx.fileScene.write<float>(layer.fogMax.value);
+    ctx.fileScene.write<uint8_t>(fogMode);
+
+    ctx.fileScene.write<uint8_t>(0); // padding
+    ctx.fileScene.write<uint8_t>(0); // padding
+    ctx.fileScene.write<uint8_t>(0); // padding
   };
 
   for(const auto &layer : sc->conf.layers3D)writeLayer(layer);
