@@ -233,7 +233,7 @@ int main(int argc, char** argv)
 
       auto obj = scene->getObjectByUUID(ctx.selObjectUUID);
       if(!obj)return false;
-      ctx.clipboard = obj->serialize();
+      ctx.clipboard = obj->serialize().dump();
 
       return true;
     });
