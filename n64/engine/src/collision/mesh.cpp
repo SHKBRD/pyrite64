@@ -258,6 +258,37 @@ namespace {
     const float t = (t3d_vec3_dot(normal, pos) - t3d_vec3_dot(normal, vert)) / normal.v[1];
     return pos + fm_vec3_t{{0, -t, 0}};
   }
+
+  Coll::RaycastRes triVsRay3D(
+    const fm_vec3_t &rayStart,
+    const fm_vec3_t &dir,
+    const fm_vec3_t &vert0,
+    const fm_vec3_t &vert1,
+    const fm_vec3_t &vert2,
+    const fm_vec3_t &normal
+  ) {
+    float planeDist = pointPlaneDistance(rayStart, vert0, normal);
+    if((planeDist < MIN_PENETRATION) || (t3d_vec3_dot(&dir, &normal) >= 0.0f)) {
+      return {};
+    }
+
+    float t = planeDist / t3d_vec3_dot(&dir, &normal);
+    fm_vec3_t hitPos = rayStart - dir * t;
+
+    auto baryPos = getTriBaryCoord(hitPos, vert0, vert1, vert2);
+    const bool isInTri = (baryPos.v[0] >= 0.0f) && (baryPos.v[1] >= 0.0f)
+      && ((baryPos.v[0] + baryPos.v[1]) <= 1.0f);
+
+    if(isInTri) {
+      return {
+        .hitPos = hitPos,
+        .normal = normal,
+        .flags = 1
+      };
+    }
+
+    return {};
+  }
 }
 
 P64::Coll::CollInfo P64::Coll::Mesh::vsSphere(const P64::Coll::BCS &sphere, const P64::Coll::Triangle &triangle) const {
@@ -268,31 +299,40 @@ P64::Coll::CollInfo P64::Coll::Mesh::vsBox(const P64::Coll::BCS &box, const P64:
   return triVsBox(box, triangle);
 }
 
-Coll::RaycastRes Coll::Mesh::vsFloorRay(const fm_vec3_t &rayStart, const P64::Coll::Triangle &face) const
+Coll::RaycastRes Coll::Mesh::vsRay(const fm_vec3_t &rayStart, const fm_vec3_t &dir, const P64::Coll::Triangle &face) const
 {
-    const auto &vert0 = *face.v[0];
-    const auto &vert1 = *face.v[1];
-    const auto &vert2 = *face.v[2];
+  const auto &vert0 = *face.v[0];
+  const auto &vert1 = *face.v[1];
+  const auto &vert2 = *face.v[2];
 
-    // raycast the floor, this means we can reduce this to a 2D point vs. triangle test
-    // by projecting it down (aka ignoring height)
-    auto tri2D = Triangle2D{{
-      {vert0.x, vert0.z},
-      {vert1.x, vert1.z},
-      {vert2.x, vert2.z}
-    }};
-
-    if(!pointVsTriangle2D({rayStart.v[0], rayStart.v[2]}, tri2D)) {
-      return {};
-    }
-
-    auto hitPos = getTrianglePosFromXZ(rayStart, vert0, face.normal);
-    if(hitPos.v[1] > rayStart.v[1]) {
-      return {};
-    }
-
-    return {
-      .hitPos = hitPos,
-      .normal = face.normal,
-    };
+  // In most cases we want floor ray-casting, which can be  transformed into a 2D case.
+  // Otherwise, fallback to a full 3D intersection test.
+  // Note that this refers to a downwards-ray in the local space of the mesh.
+  //if(fabsf(dir.y) < 0.999f)
+  {
+    return triVsRay3D(rayStart, dir, vert0, vert1, vert2, face.normal);
   }
+
+  // raycast the floor, this means we can reduce this to a 2D point vs. triangle test
+  // by projecting it down (aka ignoring height)
+  auto tri2D = Triangle2D{{
+    {vert0.x, vert0.z},
+    {vert1.x, vert1.z},
+    {vert2.x, vert2.z}
+  }};
+
+  if(!pointVsTriangle2D({rayStart.v[0], rayStart.v[2]}, tri2D)) {
+    return {};
+  }
+
+  auto hitPos = getTrianglePosFromXZ(rayStart, vert0, face.normal);
+  if(hitPos.v[1] > rayStart.v[1]) {
+    return {};
+  }
+
+  return {
+    .hitPos = hitPos,
+    .normal = face.normal,
+    .flags = 1
+  };
+}

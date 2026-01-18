@@ -44,7 +44,7 @@ namespace P64::Coll
         }
       }
 
-      RaycastRes raycastFloor(const fm_vec3_t &pos);
+      RaycastRes raycast(const fm_vec3_t &pos, const fm_vec3_t &dir);
 
       [[nodiscard]] const std::vector<BCS*> &getSpheres() const {
         return collBCS;

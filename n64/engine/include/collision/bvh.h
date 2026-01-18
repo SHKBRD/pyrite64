@@ -35,6 +35,6 @@ namespace P64::Coll
       vsAABB((bcs).toAABB(), res);
     }
 
-    void raycastFloor(const Coll::IVec3 &pos, BVHResult &res) const;
+    void raycast(const fm_vec3_t &pos, const fm_vec3_t &dir, BVHResult &res) const;
   };
 }

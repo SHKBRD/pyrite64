@@ -28,7 +28,8 @@ namespace P64::Coll
     IVec3 max{};
 
     bool vsAABB(const AABB &other) const;
-    bool vs2DPointY(const IVec3 &pos) const;
+    bool vsRay(const fm_vec3_t &pos, const fm_vec3_t &dir) const;
+    bool vsPoint(const IVec3 &pos) const;
   };
   static_assert(sizeof(AABB) == (6 * sizeof(int16_t)));
 
@@ -100,9 +101,10 @@ namespace P64::Coll
   struct RaycastRes {
     fm_vec3_t hitPos{};
     fm_vec3_t normal{};
+    uint32_t flags{};
 
     [[nodiscard]] bool hasResult() const {
-      return normal.y != 0.0f;
+      return flags != 0;
     }
   };
 

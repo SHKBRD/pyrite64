@@ -31,7 +31,7 @@ namespace P64::Coll
 
     [[nodiscard]] CollInfo vsSphere(const BCS &sphere, const Triangle& triangle) const;
     [[nodiscard]] CollInfo vsBox(const BCS &box, const Triangle& triangle) const;
-    [[nodiscard]] RaycastRes vsFloorRay(const fm_vec3_t &pos, const Triangle& triangle) const;
+    [[nodiscard]] RaycastRes vsRay(const fm_vec3_t &pos, const fm_vec3_t &dir, const Triangle& triangle) const;
 
     static Mesh* load(void* rawData);
   };

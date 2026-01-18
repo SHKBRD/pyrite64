@@ -91,6 +91,8 @@ P64::Coll::CollInfo P64::Coll::Scene::vsBCS(BCS &bcs, const fm_vec3_t &velocity,
           res.penetration = res.penetration + collInfo.penetration;
           res.meshInstance = meshInst;
 
+          collInfo.floorWallAngle = meshInst->object->rot * collInfo.floorWallAngle;
+
           bool hitFloor = isFloor(collInfo.floorWallAngle.y);
           bcs.hitTriTypes |= hitFloor ? TriType::FLOOR : TriType::WALL;
           if(hitFloor) {
@@ -214,18 +216,16 @@ void P64::Coll::Scene::update(float deltaTime)
   ticks += get_ticks() - ticksStart;
 }
 
-P64::Coll::RaycastRes P64::Coll::Scene::raycastFloor(const fm_vec3_t &pos) {
+P64::Coll::RaycastRes P64::Coll::Scene::raycast(const fm_vec3_t &pos, const fm_vec3_t &dir) {
   ++raycastCount;
-  P64::Coll::RaycastRes res{
-    .hitPos = fm_vec3_t{0.0f, 0.0f, 0.0f},
-    .normal = fm_vec3_t{0.0f, 0.0f, 0.0f},
-  };
+  P64::Coll::RaycastRes res{};
 
   float highestFloor = -99999.0f;
   for(auto meshInst : meshes)
   {
     auto &mesh = *meshInst->mesh;
     auto posLocal = meshInst->intoLocalSpace(pos);
+    auto dirLocal = meshInst->invRot * dir;
 
     P64::Coll::IVec3 posInt = {
       .v = {
@@ -236,13 +236,15 @@ P64::Coll::RaycastRes P64::Coll::Scene::raycastFloor(const fm_vec3_t &pos) {
     };
 
     P64::Coll::BVHResult bvhRes{};
-    mesh.bvh->raycastFloor(posInt, bvhRes);
+
+    //Debug::drawLine(meshInst->outOfLocalSpace(posLocal), meshInst->outOfLocalSpace(posLocal + dirLocal * 100.0f), color_t{0xFF,0x00,0xFF,0xFF});
+
+    mesh.bvh->raycast(posLocal, dirLocal, bvhRes);
 
     for(int b=0; b<bvhRes.count; ++b) {
       uint32_t t = bvhRes.triIndex[b];
     //for(uint32_t b=0; b<mesh.triCount; ++b) {
       //uint32_t t = b;
-      if(!isFloor(mesh.normals[t]))continue;
 
       int idxA = mesh.indices[t*3];
       int idxB = mesh.indices[t*3+1];
@@ -258,12 +260,16 @@ P64::Coll::RaycastRes P64::Coll::Scene::raycastFloor(const fm_vec3_t &pos) {
         .v = {&mesh.verts[idxA], &mesh.verts[idxB], &mesh.verts[idxC]}
       };
 
-      auto collInfo = mesh.vsFloorRay(posLocal, tri);
-      if(collInfo.hasResult() && collInfo.hitPos.v[1] > highestFloor)
+      auto collInfo = mesh.vsRay(posLocal, dirLocal, tri);
+      if(collInfo.hasResult())
       {
+        res.flags |= collInfo.flags;
         res.hitPos = meshInst->outOfLocalSpace(collInfo.hitPos);
-        res.normal = meshInst->object->rot * collInfo.normal;
-        highestFloor = collInfo.hitPos.v[1];
+        //if(res.hitPos.v[1] > highestFloor)
+        {
+          res.normal = meshInst->object->rot * collInfo.normal;
+          highestFloor = res.hitPos.v[1];
+        }
       }
     }
   }

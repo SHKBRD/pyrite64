@@ -8,7 +8,8 @@
 namespace {
   const int16_t *ctxData;
   const P64::Coll::AABB *ctxAABB;
-  const P64::Coll::IVec3 *ctxRayPos;
+  const fm_vec3_t *ctxRayPos;
+  const fm_vec3_t *ctxRayDir;
   P64::Coll::BVHResult *ctxRes;
 
   void queryNodeAABB(const P64::Coll::BVHNode *node)
@@ -30,16 +31,16 @@ namespace {
     }
   }
 
-  void queryNodeRaycastFloor(const P64::Coll::BVHNode *node)
+  void queryNodeRaycast(const P64::Coll::BVHNode *node)
   {
-    if(!node->aabb.vs2DPointY(*ctxRayPos))return;
+    if(!node->aabb.vsRay(*ctxRayPos, *ctxRayDir))return;
 
     int dataCount = node->value & 0b1111;
     int offset = (int16_t)node->value >> 4;
 
     if(dataCount == 0) {
-      queryNodeRaycastFloor(&node[offset]);
-      queryNodeRaycastFloor(&node[offset + 1]);
+      queryNodeRaycast(&node[offset]);
+      queryNodeRaycast(&node[offset + 1]);
       return;
     }
 
@@ -57,11 +58,12 @@ void P64::Coll::BVH::vsAABB(const AABB &aabb, BVHResult &res) const {
   queryNodeAABB(nodes);
 }
 
-void P64::Coll::BVH::raycastFloor(const IVec3 &pos, BVHResult &res) const {
+void P64::Coll::BVH::raycast(const fm_vec3_t &pos, const fm_vec3_t &dir, BVHResult &res) const {
   ctxData = (int16_t*)&nodes[nodeCount]; // data starts right after nodes;
   ctxRayPos = &pos;
+  ctxRayDir = &dir;
   ctxRes = &res;
-  queryNodeRaycastFloor(nodes);
+  queryNodeRaycast(nodes);
 }
 
 

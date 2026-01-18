@@ -92,4 +92,5 @@ add_executable(n64_engine
         engine/src/collision/scene.cpp
         engine/src/scene/components/culling.cpp
         engine/include/renderer/material.h
+        engine/src/collision/shapes.cpp
 )
