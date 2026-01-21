@@ -13,6 +13,7 @@
 #include "nodes/nodeCompare.h"
 #include "nodes/nodeValue.h"
 #include "nodes/nodeRepeat.h"
+#include "nodes/nodeFunc.h"
 
 namespace
 {
@@ -70,6 +71,7 @@ namespace Project::Graph
     TABLE_ENTRY(Compare),
     TABLE_ENTRY(Value),
     TABLE_ENTRY(Repeat),
+    TABLE_ENTRY(Func),
   });
 
   const std::vector<std::string> & Graph::getNodeNames()
@@ -154,15 +156,13 @@ namespace Project::Graph
           auto rightNode = rightPin->getParent();
           if(leftNode && rightNode) {
 
-            // find pin in list of links to get index
-            auto &rightIns = rightNode->getIns();
             uint32_t leftIndex = getIndexLeft(leftPin);
             uint32_t rightIndex = getIndexRight(rightPin);
 
-            printf("Node Link: %s:%s:%d -> %s:%s:%d\n",
+            /*printf("Node Link: %s:%s:%d -> %s:%s:%d\n",
               leftNode->getName().c_str(), leftPin->getName().c_str(), leftIndex,
               rightNode->getName().c_str(), rightPin->getName().c_str(), rightIndex
-            );
+            );*/
             nlohmann::json jLink{};
             jLink["src"] = ((Node::Base*)leftNode)->uuid;
             jLink["srcPort"] = leftIndex;
