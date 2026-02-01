@@ -36,6 +36,7 @@ namespace P64::Renderer::BigTex
   {
     uint32_t allocSize = TEX_SIZE_BYTES * maxSize;
     debugf("Reserve %.2fKB (%.2fMB) for %lu textures\n", (double)allocSize/1024.0, (double)allocSize/1024.0/1024.0, maxSize);
+    debugf("  Address-end: 0x%08lX\n", TEX_BASE_ADDR + allocSize);
     buffer = (uint8_t*)TEX_BASE_ADDR;
     sys_hw_memset(buffer, 0, allocSize);
   }
@@ -54,7 +55,8 @@ namespace P64::Renderer::BigTex
 
       auto newIdx = idx++;
       texMap[name] = newIdx;
-      assertf(idx < maxSize, "Texture buffer full: %lu/%lu", idx, maxSize);
+      debugf("Tex[%lu/%lu]: %s\n", newIdx, maxSize, path.c_str());
+      assertf(idx <= maxSize, "Texture buffer full: %lu/%lu", idx, maxSize);
       return newIdx;
     }
     return it->second;

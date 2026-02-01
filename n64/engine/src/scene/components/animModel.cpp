@@ -71,12 +71,12 @@ namespace P64::Comp
     data->flags = initData->flags;
     data->material = initData->material;
 
-    bool isBigTex = SceneManager::getCurrent().getConf().pipeline == SceneConf::Pipeline::BIG_TEX_256;
+    /*bool isBigTex = SceneManager::getCurrent().getConf().pipeline == SceneConf::Pipeline::BIG_TEX_256;
 
     if(isBigTex) {
       Renderer::BigTex::patchT3DM(*data->model);
       return;
-    }
+    }*/
 
     // @TODO: all of this is rather hacky and unoptimized
     // @TODO: refactor and rethink animations here

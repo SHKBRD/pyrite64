@@ -42,7 +42,7 @@ namespace Project::Graph::Node
 
       void build(BuildCtx &ctx) override {
         auto resVar = "res_" + Utils::toHex64(uuid);
-        ctx.globalVar("uint32_t&", resVar, std::string{"inst->args[0]"});
+        ctx.globalVar("uint32_t&", resVar, "inst->args[" + std::to_string(value) + "]");
       }
   };
 }

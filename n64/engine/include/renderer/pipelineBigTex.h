@@ -17,7 +17,7 @@ namespace P64
       constexpr static uint32_t DRAW_MODE_UV  = 1;
       constexpr static uint32_t DRAW_MODE_MAT = 2;
 
-      Renderer::BigTex::Textures textures{16};
+      Renderer::BigTex::Textures textures{18};
       Renderer::BigTex::UVTexture uvTex{};
       uint32_t drawMode{DRAW_MODE_DEF};
 

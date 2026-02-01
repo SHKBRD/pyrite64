@@ -107,7 +107,7 @@ namespace P64::Comp
     bool isBigTex = SceneManager::getCurrent().getConf().pipeline == SceneConf::Pipeline::BIG_TEX_256;
     bool separate = (data->flags & FLAG_CULLING) || (data->meshIdxCount != 0);
 
-    if(isBigTex) {
+    if(isBigTex && data->layerIdx == 0) {
       Renderer::BigTex::patchT3DM(*data->model);
       return;
     }

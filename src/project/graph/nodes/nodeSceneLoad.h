@@ -56,7 +56,7 @@ namespace Project::Graph::Node
       void build(BuildCtx &ctx) override
       {
         if(ctx.inValUUIDs->empty()) {
-          ctx.localConst("uint16_t", "sceneId", 0);
+          ctx.localConst("uint16_t", "sceneId", std::to_string(sceneId));
         } else {
           auto idStr = Utils::toHex64(ctx.inValUUIDs->at(0));
           ctx.localVar("uint16_t", "sceneId", "res_" + idStr);
