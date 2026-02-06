@@ -13,12 +13,27 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-lto")
 
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 
-#list(PREPEND CMAKE_PREFIX_PATH
-#    "${CMAKE_SOURCE_DIR}/vendored/SDL/install"
-#)
-#find_package(SDL3 CONFIG REQUIRED)
+set(SDLIMAGE_BMP ON)
+set(SDLIMAGE_GIF ON)
+set(SDLIMAGE_JPG ON)
+set(SDLIMAGE_PNG ON)
+set(SDLIMAGE_SVG ON)
 
+# Not needed, some of those also break windows builds due to missing ASM compilers
+set(SDLIMAGE_AVIF OFF)
+set(SDLIMAGE_JXL OFF)
+set(SDLIMAGE_LBM OFF)
+set(SDLIMAGE_PCX OFF)
+set(SDLIMAGE_PNM OFF)
+set(SDLIMAGE_QOI OFF)
+set(SDLIMAGE_TGA OFF)
+set(SDLIMAGE_TIF OFF)
+set(SDLIMAGE_WEBP OFF)
+set(SDLIMAGE_XCF OFF)
+set(SDLIMAGE_XPM OFF)
+set(SDLIMAGE_XV OFF)
 add_subdirectory(vendored/SDL_image EXCLUDE_FROM_ALL)
+
 add_subdirectory(vendored/glm EXCLUDE_FROM_ALL)
 
 add_compile_definitions(IMGUI_USE_WCHAR32)
