@@ -110,7 +110,13 @@ bool Editor::CreateProjectOverlay::draw()
     ImGui::Text("Project will be created in:");
     fs::path fullPath = projectPath;
     fullPath = fullPath / projectSafeName;
-    ImGui::TextColored({0.7f, 0.7f, 0.7f, 1.0f}, "%s", fullPath.string().c_str());
+
+    bool isValid = !fullPath.string().contains(' ');
+    if(isValid) {
+      ImGui::TextColored({0.7f, 0.7f, 0.7f, 1.0f}, "%s", fullPath.string().c_str());  
+    } else {
+      ImGui::TextColored({1.0f, 0.5f, 0.5f, 1.0f}, "The project path must not contain spaces!");
+    }
 
     ImGui::Dummy({0, 10});
     ImGui::Separator();
@@ -132,7 +138,7 @@ bool Editor::CreateProjectOverlay::draw()
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.85f, 0.50f, 0.10f, 0.8f));
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-    bool canCreate = !projectName.empty() && !projectPath.empty();
+    bool canCreate = isValid && !projectName.empty() && !projectPath.empty();
     if(!canCreate)ImGui::BeginDisabled();
     if (ImGui::Button("Create", {100, 0})) {
       nlohmann::json args{};

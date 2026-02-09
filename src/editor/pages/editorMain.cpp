@@ -159,6 +159,13 @@ void Editor::Main::draw()
     if (renderButton(texBtnOpen, "Open Project", isHoverLast, posX)) {
       Utils::FilePicker::open([](const std::string &path) {
         if (path.empty()) return;
+
+        // check if path has spaces
+        if(path.contains(' ')) {
+          Editor::Noti::add(Editor::Noti::ERROR, "Project-Path contains spaces!\nPlease move the directory to avoid build problems.");
+          return;
+        }
+
         Actions::call(Actions::Type::PROJECT_OPEN, path);
       }, true, "Choose Project Folder");
     }
