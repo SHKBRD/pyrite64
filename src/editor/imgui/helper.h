@@ -54,7 +54,7 @@ namespace ImGui
       labelSize,
       state ? ImVec4{1,1,1,1} : ImVec4{0.6f,0.6f,0.6f,1}
     )) {
-      Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Toggle Property");
+      Editor::UndoRedo::getHistory().markChanged("Toggle Property");
       state = !state;
       return true;
     }
@@ -189,75 +189,6 @@ namespace ImTable
     ImGui::TableSetColumnIndex(1);
   }
 
-  inline void handleSnapshot(const std::string &description, bool changed = false, const std::string *beforeState = nullptr)
-  {
-    if (!obj) return;
-    auto &history = Editor::UndoRedo::getHistory();
-    bool activated = ImGui::IsItemActivated();
-    bool deactivatedAfterEdit = ImGui::IsItemDeactivatedAfterEdit();
-    bool deactivated = ImGui::IsItemDeactivated();
-    bool clicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
-    bool active = ImGui::IsItemActive();
-
-    if ((activated || clicked || changed) && !history.isSnapshotActive()) {
-      if (beforeState && !beforeState->empty()) {
-        history.beginSnapshotFromState(*beforeState, description);
-      } else {
-        history.beginSnapshot(description);
-      }
-    }
-    if (deactivatedAfterEdit) {
-      history.endSnapshot();
-    }
-
-    if (deactivated && !deactivatedAfterEdit && history.isSnapshotActive()) {
-      history.endSnapshot();
-    }
-
-    if (changed && !active && history.isSnapshotActive()) {
-      history.endSnapshot();
-    }
-
-  }
-
-  //Guard for capturing scene state before a widget edit and committing the snapshot after.
-  struct SnapshotGuard {
-    std::string beforeState{};
-    std::string description;
-
-    SnapshotGuard(const std::string& desc) : description(desc) {
-      if (!obj) return;
-      auto &history = Editor::UndoRedo::getHistory();
-      if (history.isSnapshotActive()) return;
-      if (!shouldCaptureSnapshot()) return;
-      beforeState = getCachedBeforeState(history);
-    }
-
-    void finish(bool changed) {
-      handleSnapshot(description, changed, beforeState.empty() ? nullptr : &beforeState);
-    }
-
-    private:
-      static bool shouldCaptureSnapshot() {
-        return ImGui::IsMouseClicked(ImGuiMouseButton_Left)
-          || ImGui::IsMouseClicked(ImGuiMouseButton_Right)
-          || ImGui::IsMouseClicked(ImGuiMouseButton_Middle)
-          || ImGui::IsKeyPressed(ImGuiKey_Enter)
-          || ImGui::IsKeyPressed(ImGuiKey_Space);
-      }
-
-      static std::string getCachedBeforeState(Editor::UndoRedo::History &history) {
-        static int lastFrame = -1;
-        static std::string cached;
-        int frame = ImGui::GetFrameCount();
-        if (frame != lastFrame) {
-          cached = history.captureSnapshotState();
-          lastFrame = frame;
-        }
-        return cached;
-      }
-  };
-
   template<typename GetLabel, typename ApplySelection>
   inline bool drawComboSelection(
     const char* label,
@@ -274,10 +205,8 @@ namespace ImTable
         bool selected = (i == current);
         if (ImGui::Selectable(getLabel(i), selected)) {
           if (obj) {
-            auto &history = Editor::UndoRedo::getHistory();
-            history.beginSnapshot(snapshotLabel);
+            Editor::UndoRedo::getHistory().markChanged(snapshotLabel);
             applySelection(i);
-            history.endSnapshot();
           } else {
             applySelection(i);
           }
@@ -342,30 +271,18 @@ namespace ImTable
     OnChange onChange
   )
   {
-    int result = addVecComboBox(name, items, id, onChange);
+    auto oldId = id;
+    addVecComboBox(name, items, id, onChange);
     
-    // Capture state BEFORE checking drag-drop (for undo/redo)
-    std::string beforeState;
-    if (obj) {
-      auto &history = Editor::UndoRedo::getHistory();
-      beforeState = history.captureSnapshotState();
-    }
-    
-    // Check for drag-drop after the combo box
     if (ImGui::HandleComboBoxDragDrop(id, validator)) {
-      // HandleComboBoxDragDrop has already modified 'id' to the new value
-      // Now create snapshot with the before-state we captured
-      if (obj && !beforeState.empty()) {
-        auto &history = Editor::UndoRedo::getHistory();
-        history.beginSnapshotFromState(beforeState, "Edit " + name);
-        onChange(id);
-        history.endSnapshot();
-      } else {
-        onChange(id);
-      }
+      onChange(id);
     }
-    
-    return result;
+
+    if (oldId != id) {
+      Editor::UndoRedo::getHistory().markChanged("Edit " + name);
+      return true;
+    }
+    return false;
   }
 
   // Asset-only drag-drop combo box
@@ -512,9 +429,8 @@ namespace ImTable
     bool disabled  (isPrefabLocked());
     if(disabled)ImGui::BeginDisabled();
     auto labelHidden = "##" + name;
-    SnapshotGuard guard("Edit " + name);
     bool changed = ImGui::Checkbox(labelHidden.c_str(), &value);
-    guard.finish(changed);
+    if(changed)Editor::UndoRedo::getHistory().markChanged("Edit " + name);
     if(disabled)ImGui::EndDisabled();
   }
 
@@ -525,7 +441,6 @@ namespace ImTable
     if(disabled)ImGui::BeginDisabled();
     auto labelHidden = "##" + name;
     // 8 checkboxes
-    SnapshotGuard guard("Edit " + name);
     for (int i = 0; i < 8; ++i) {
       bool bit = (value & (1 << i)) != 0;
       bool changed = ImGui::Checkbox(labelHidden.c_str(), &bit);
@@ -535,8 +450,9 @@ namespace ImTable
         } else {
           value &= ~(1 << i);
         }
+
+        Editor::UndoRedo::getHistory().markChanged("Edit " + name);
       }
-      guard.finish(changed);
       labelHidden += "1";
       if (i < 7)ImGui::SameLine();
     }
@@ -581,9 +497,8 @@ namespace ImTable
     bool disabled  (isPrefabLocked());
     ImGui::PushID(name.c_str());
     if(disabled)ImGui::BeginDisabled();
-    SnapshotGuard guard("Edit " + name);
     bool changed = typedInput<T>(&value);
-    guard.finish(changed);
+    if(changed)Editor::UndoRedo::getHistory().markChanged("Edit " + name);
     if(disabled)ImGui::EndDisabled();
     ImGui::PopID();
     return changed;
@@ -594,9 +509,8 @@ namespace ImTable
   {
     add(name);
     ImGui::PushID(name.c_str());
-    SnapshotGuard guard("Edit " + name);
     bool changed = typedInput<T>(&prop.value);
-    guard.finish(changed);
+    if(changed)Editor::UndoRedo::getHistory().markChanged("Edit " + name);
     ImGui::PopID();
     return changed;
   }
@@ -627,8 +541,8 @@ namespace ImTable
         {24,24},
         ImVec4{1,1,1,1}
       )) {
-        Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Edit " + name);
         propState->value = !propState->value;
+        Editor::UndoRedo::getHistory().markChanged("Edit " + name);
       }
       ImGui::PopFont();
       ImGui::SameLine();
@@ -660,7 +574,6 @@ namespace ImTable
         ICON_MDI_LOCK,
         ImVec2{16,16}
       )) {
-        Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Edit " + name);
         if(isOverrideLocal) {
           obj->addPropOverride(prop);
         } else {
@@ -670,9 +583,8 @@ namespace ImTable
       ImGui::SameLine();
     }
 
-    SnapshotGuard guard("Edit " + name);
     res = editFunc(val);
-    guard.finish(res);
+    if (res) Editor::UndoRedo::getHistory().markChanged("Edit " + name);
 
     if(isDisabled)ImGui::EndDisabled();
 
@@ -696,14 +608,13 @@ namespace ImTable
     add(name);
     bool disabled (isPrefabLocked());
     if(disabled)ImGui::BeginDisabled();
-    SnapshotGuard guard("Edit " + name);
     bool changed = false;
     if (withAlpha) {
       changed = ImGui::ColorEdit4(name.c_str(), glm::value_ptr(color), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
     } else {
       changed = ImGui::ColorEdit3(name.c_str(), glm::value_ptr(color), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
     }
-    guard.finish(changed);
+    if(changed)Editor::UndoRedo::getHistory().markChanged("Edit " + name);
     if(disabled)ImGui::EndDisabled();
   }
 
@@ -719,14 +630,13 @@ namespace ImTable
     ImGui::PopID();
     ImGui::SameLine();
 
-    SnapshotGuard guard("Edit " + name);
     bool changed = false;
     if (placeholder.empty()) {
       changed = ImGui::InputText(labelHidden.c_str(), &str);
     } else {
       changed = ImGui::InputTextWithHint(labelHidden.c_str(), placeholder.c_str(), &str);
     }
-    guard.finish(changed);
+    if(changed)Editor::UndoRedo::getHistory().markChanged("Edit " + name);
   }
 
 }

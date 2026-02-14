@@ -165,7 +165,7 @@ namespace Editor::Actions
       auto scene = ctx.project->getScenes().getLoadedScene();
       if(!scene)return false;
 
-      Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Paste Object");
+      UndoRedo::getHistory().markChanged("Paste Object");
       auto obj = scene->addObject(ctx.clipboard.data, ctx.clipboard.refUUID);
       ctx.selObjectUUID = obj->uuid;
       return true;

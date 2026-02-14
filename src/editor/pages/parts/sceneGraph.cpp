@@ -174,11 +174,11 @@ namespace
       if (ImGui::BeginPopupContextItem("NodePopup"))
       {
         if (ImGui::MenuItem(ICON_MDI_CUBE_OUTLINE " Add Object")) {
-          Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Add Object");
           auto added = scene.addObject(obj);
           if (added) {
             ctx.selObjectUUID = added->uuid;
           }
+          Editor::UndoRedo::getHistory().markChanged("Add Object");
         }
 
         if (obj.parent) {
@@ -218,7 +218,7 @@ void Editor::SceneGraph::draw()
 
   if(dragDropTask.sourceUUID && dragDropTask.targetUUID) {
     //printf("dragDropTarget %08X -> %08X (%d)\n", dragDropTask.sourceUUID, dragDropTask.targetUUID, dragDropTask.isInsert);
-    Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Move Object");
+    UndoRedo::getHistory().markChanged("Move Object");
     scene->moveObject(
       dragDropTask.sourceUUID,
       dragDropTask.targetUUID,
@@ -227,7 +227,7 @@ void Editor::SceneGraph::draw()
   }
 
   if (deleteObj) {
-    Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Delete Object");
+    UndoRedo::getHistory().markChanged("Delete Object");
     scene->removeObject(*deleteObj);
     deleteObj = nullptr;
   }

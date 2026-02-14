@@ -30,6 +30,8 @@
 
 #include <cctype>
 
+#include "editor/undoRedo.h"
+
 Context ctx{};
 constinit SDL_GPUSampler *texSamplerRepeat{nullptr};
 
@@ -263,7 +265,9 @@ int main(int argc, char** argv)
       scene.update();
 
       if (ctx.project) {
+        Editor::UndoRedo::getHistory().begin();
         editorScene.draw();
+        Editor::UndoRedo::getHistory().end();
       } else {
         editorMain.draw();
       }

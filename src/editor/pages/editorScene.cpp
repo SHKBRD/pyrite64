@@ -278,8 +278,10 @@ void Editor::Scene::draw()
   ImGui::PushFont(ImGui::getFontMono());
   ImVec4 perfColor{1.0f,1.0f,1.0f,0.4f};
   if (io.Framerate < 45) perfColor = {1.0f, 0.5f, 0.5f, 1.0f};
-  ImGui::TextColored(perfColor, "%d FPS | History: %s | CPU: %.2fms",
+  ImGui::TextColored(perfColor, "%d FPS | History: %d/%d %s | CPU: %.2fms",
     (int)roundf(io.Framerate),
+    UndoRedo::getHistory().getUndoCount(),
+    UndoRedo::getHistory().getRedoCount(),
     Utils::byteSize(UndoRedo::getHistory().getMemoryUsage()).c_str(),
     fpsRingBuffer.average()
   );

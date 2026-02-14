@@ -129,12 +129,12 @@ void Editor::ObjectInspector::draw() {
   if (compCopy) {
     const int compCopyId = compCopy->id;
     const std::string compCopyName = compCopy->name;
-    Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Duplicate Component");
+    UndoRedo::getHistory().markChanged("Duplicate Component");
     srcObj->addComponent(compCopyId);
     srcObj->components.back().name = compCopyName + " Copy";
   }
   if (compDelUUID) {
-    Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Delete Component");
+    UndoRedo::getHistory().markChanged("Delete Component");
     srcObj->removeComponent(compDelUUID);
   }
 
@@ -150,7 +150,7 @@ void Editor::ObjectInspector::draw() {
     for (auto &comp : Project::Component::TABLE_SORTED_BY_NAME) {
       auto name = std::string{comp.icon} + " " + comp.name;
       if(ImGui::MenuItem(name.c_str())) {
-        Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Add Component");
+        UndoRedo::getHistory().markChanged("Add Component");
         srcObj->addComponent(comp.id);
       }
     }

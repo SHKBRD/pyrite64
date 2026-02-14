@@ -344,7 +344,7 @@ void Editor::Viewport3D::draw()
 
     // Handle object deletion when Delete is pressed while the viewport is focused and an object is selected
     if (ImGui::IsWindowFocused() && obj && ImGui::IsKeyPressed(ImGuiKey_Delete)) {
-      Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Delete Object");
+      UndoRedo::getHistory().markChanged("Delete Object");
       scene->removeObject(*obj);
       ctx.selObjectUUID = 0;
       obj = nullptr;
@@ -456,7 +456,7 @@ void Editor::Viewport3D::draw()
       uint64_t prefabUUID = *((uint64_t*)payload->Data);
       auto prefab = ctx.project->getAssets().getPrefabByUUID(prefabUUID);
       if(prefab) {
-        Editor::UndoRedo::SnapshotScope snapshot(Editor::UndoRedo::getHistory(), "Add Prefab");
+        UndoRedo::getHistory().markChanged("Add Prefab");
         auto added = scene->addPrefabInstance(prefabUUID);
         if (added) {
           ctx.selObjectUUID = added->uuid;
@@ -474,12 +474,6 @@ void Editor::Viewport3D::draw()
   ImGuizmo::SetRect(currPos.x, currPos.y, currSize.x, currSize.y);
 
   if (obj) {
-    // If the transform gizmo is being used and we were not previously transforming, start a snapshot
-    if (ImGuizmo::IsUsing() && !gizmoTransformActive) {
-      gizmoTransformActive = true;
-      Editor::UndoRedo::getHistory().beginSnapshot("Transform Object");
-    }
-
     glm::mat4 gizmoMat{};
     glm::vec3 skew{0,0,0};
     glm::vec4 persp{0,0,0,1};
@@ -517,6 +511,7 @@ void Editor::Viewport3D::draw()
       nullptr,
       isSnap ? glm::value_ptr(snap) : nullptr
     )) {
+      gizmoTransformActive = true;
       if(!obj->uuidPrefab.value || isOverride)
       {
         std::unordered_map<uint64_t, glm::vec3> relPosMap{};
@@ -559,7 +554,7 @@ void Editor::Viewport3D::draw()
 
   // If the gizmo was active but is no longer being used, end the transform snapshot
   if (gizmoTransformActive && (!ImGuizmo::IsUsing() || !obj)) {
-    Editor::UndoRedo::getHistory().endSnapshot();
+    UndoRedo::getHistory().markChanged("Transform Object");
     gizmoTransformActive = false;
   }
 
