@@ -22,7 +22,6 @@ Renderer::Camera::Camera() {
     glm::radians(-180.0f),
     glm::vec3(1,0,0)
   );
-  posOffset = {0,220,220};
 }
 
 void Renderer::Camera::update() {
@@ -34,10 +33,10 @@ void Renderer::Camera::update() {
     return;
   } 
 
-  float camDist = glm::length(posOffset);
+  float camDist = glm::length(pos - pivot);
   glm::vec3 forward = rot * WORLD_FORWARD * zoomSpeed;
   if (zoomSpeed < 0 || camDist > fabs(zoomSpeed)) {
-    posOffset += forward;
+    pos += forward;
   } else {
     pos += forward;
     pivot += forward;
@@ -71,8 +70,8 @@ void Renderer::Camera::apply(UniformGlobal &uniGlobal)
 
   const glm::vec3 direction = glm::normalize(rot * WORLD_FORWARD);
   const glm::vec3 dynamicUp = glm::normalize(rot * WORLD_UP);
-  const glm::vec3 target = pos + posOffset + direction;
-  uniGlobal.cameraMat = glm::lookAt(pos + posOffset, target, dynamicUp);
+  const glm::vec3 target = pos + direction;
+  uniGlobal.cameraMat = glm::lookAt(pos, target, dynamicUp);
 
 
 /*
@@ -106,8 +105,8 @@ void Renderer::Camera::lookDelta(glm::vec2 screenDelta)
   }
 
   rotateDelta(screenDelta);
-  glm::vec3 diff = (pos + posOffset) - pivotBase;
-  pivot = pos - (rot * glm::inverse(rotBase) * diff) + posOffset;
+  glm::vec3 diff = pos - pivotBase;
+  pivot = pos - rot * glm::inverse(rotBase) * diff;
 }
 
 void Renderer::Camera::orbitDelta(glm::vec2 screenDelta)
@@ -117,8 +116,8 @@ void Renderer::Camera::orbitDelta(glm::vec2 screenDelta)
   }
 
   rotateDelta(screenDelta);
-  glm::vec3 diff = (posBase + posOffset) - pivot;
-  pos = pivot + (rot * glm::inverse(rotBase) * diff) - posOffset;
+  glm::vec3 diff = posBase - pivot;
+  pos = pivot + rot * glm::inverse(rotBase) * diff;
 }
 
 void Renderer::Camera::moveDelta(glm::vec2 screenDelta) {
@@ -133,7 +132,7 @@ void Renderer::Camera::moveDelta(glm::vec2 screenDelta) {
       pixelsToWorld = (ORTHO_SIZE * 2.0f) / screenSize.y;
     }
   } else {
-    float dist = glm::length(posOffset);
+    float dist = glm::length(pivot - pos);
     if (dist > 0.001f) {
       pixelsToWorld = dist * 0.001f;
     }
@@ -154,7 +153,7 @@ void Renderer::Camera::focus(glm::vec3 position, float distance) {
   isMoving = false;
   isRotating = false;
   pivot = position;
-  posOffset = rot * -WORLD_FORWARD * distance;
-  pos = position + posOffset;
+  glm::vec3 posOffset = rot * -WORLD_FORWARD * distance;
+  pos = pivot + posOffset;
 }
 

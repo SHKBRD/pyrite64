@@ -17,7 +17,6 @@ namespace Renderer
 
     public:
       glm::vec3 pos{};
-      glm::vec3 posOffset{};
       glm::vec3 pivot{};
       glm::quat rot{0,0,0,1};
       glm::vec2 screenSize{1,1};

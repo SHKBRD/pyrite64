@@ -165,7 +165,7 @@ Editor::Viewport3D::Viewport3D()
   gizStyle.circleRadius = 19.0f;
   gizStyle.labelSize = 1.9f;
   gizStyle.labelColor = IM_COL32(0,0,0,0xFF);
-  camera.pos = {0,0,0};
+  camera.pos = {0,220,220};
 }
 
 Editor::Viewport3D::~Viewport3D() {
@@ -573,10 +573,12 @@ void Editor::Viewport3D::draw()
     gizmoTransformActive = false;
   }
 
-  float camDist = glm::length(camera.posOffset);
-  if (ImViewGuizmo::Rotate(camera.posOffset, camera.rot, gizPos)) {
+  glm::vec3 posOffset = camera.pos - camera.pivot;
+  float camDist = glm::length(posOffset);
+  if (ImViewGuizmo::Rotate(posOffset, camera.rot, gizPos)) {
     if (camDist > 0.0001f) {
-      camera.posOffset = glm::normalize(camera.posOffset) * camDist;
+      posOffset = glm::normalize(posOffset) * camDist;
+      camera.pos = camera.pivot + posOffset;
     }
   }
 }
