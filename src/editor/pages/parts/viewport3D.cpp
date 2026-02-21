@@ -31,6 +31,7 @@ namespace
     ImGuizmo::OPERATION::SCALE
   };
   constinit bool isTransWorld = true;
+  constinit bool overRotGizmo = false;
 
   // A toggleable "connected" button (like in toolbars)
 bool ConnectedToggleButton(const char* text, bool active, bool first, bool last, ImVec2 size = ImVec2(20, 20))
@@ -349,7 +350,7 @@ void Editor::Viewport3D::draw()
   bool leftDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
   bool leftReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
 
-  if (!overGizmo && isMouseHover && leftClicked) {
+  if (!overGizmo && isMouseHover && leftClicked && !isAltDown && !overRotGizmo) {
     selectionPending = true;
     selectionDragging = false;
     selectionStart = mousePos;
@@ -466,7 +467,7 @@ void Editor::Viewport3D::draw()
     }
   }
 
-  if (isMouseHover && !ImViewGuizmo::IsOver()) {
+  if (isMouseHover && !overRotGizmo) {
     float wheel = io.MouseWheel;
     if (wheel != 0.0f) {
       float wheelSpeed = (isShiftDown ? 4.0f : 1.0f) * 30.0f;
@@ -474,7 +475,7 @@ void Editor::Viewport3D::draw()
     }
   }
 
-  if (isMouseHover && !ImViewGuizmo::IsOver())
+  if (isMouseHover && !overRotGizmo)
   {
     if(!isMouseDown && newMouseDown) {
       mousePosStart = mousePos;
@@ -832,4 +833,5 @@ void Editor::Viewport3D::draw()
   if (ImViewGuizmo::Rotate(posOffset, camera.rot, gizPos, camDist)) {
     camera.pos = camera.pivot + posOffset;
   }
+  overRotGizmo = ImViewGuizmo::IsOver();
 }
