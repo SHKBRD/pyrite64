@@ -159,7 +159,7 @@ void Renderer::Camera::focusSelection(Context &ctx) {
   auto scene = ctx.project->getScenes().getLoadedScene();
   if (!scene) return;
 
-  Utils::AABB aabb;
+  Utils::AABB aabb{};
   for (uint32_t uuid : selectedUUIDs) {
     auto obj = scene->getObjectByUUID(uuid);
     if (!obj) continue;

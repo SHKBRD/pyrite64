@@ -72,7 +72,7 @@ namespace Project
       }
 
       Utils::AABB getLocalAABB() const {
-        Utils::AABB aabb;
+        Utils::AABB aabb{};
         bool hasVolume = false;
         for (const auto &entry : components) {
           const auto &info = Component::TABLE[entry.id];
@@ -83,7 +83,12 @@ namespace Project
           hasVolume = true;
         }
 
-        if (!hasVolume) aabb.addPoint({0,0,0});
+        if(!hasVolume ||
+           std::isinf(aabb.min.x) || std::isinf(aabb.min.y) || std::isinf(aabb.min.z) ||
+           std::isinf(aabb.max.x) || std::isinf(aabb.max.y) || std::isinf(aabb.max.z)) {
+          aabb.min = {-1,-1,-1};
+          aabb.max = {1,1,1};
+        }
         return aabb;
       }
 
