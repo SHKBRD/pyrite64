@@ -1,3 +1,12 @@
+# v0.4.0
+- Editor - General
+  - Fix clean-build under windows
+  - Automatically force a clean if engine code changed
+- Toolchain manager:
+  - Existing installations can now be updated too (by [@thekovic](https://www.github.com/thekovic), #11)
+- CLI
+  - New command to clean a project (`--cmd clean`)
+
 # v0.3.0
 - Editor - General
   - Auto-Save before build & run
