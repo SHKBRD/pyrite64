@@ -296,6 +296,18 @@ void Editor::Scene::draw()
     Utils::byteSize(UndoRedo::getHistory().getMemoryUsage()).c_str(),
     fpsRingBuffer.average()
   );
+
+  perfColor = {1.0f,1.0f,1.0f,0.4f};
+  std::string txtInfo = "v" PYRITE_VERSION;
+  #ifndef NDEBUG
+    perfColor = {1.0f,1.0f,1.0f,0.6f};
+    txtInfo += " [DEBUG]";
+  #endif
+
+  ImGui::SameLine();
+  ImGui::SetCursorPosX(io.DisplaySize.x - 12 - ImGui::CalcTextSize(txtInfo.c_str()).x);
+  ImGui::TextColored(perfColor, "%s", txtInfo.c_str());
+
   ImGui::PopFont();
   ImGui::End();
 
