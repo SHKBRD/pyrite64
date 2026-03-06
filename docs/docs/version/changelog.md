@@ -1,6 +1,9 @@
 # Changelog
 
 ## v0.5.0
+- Show error if assets have duplicate UUIDs.
+- Show error model-components have missing models.
+- Fix temp. broken model references at runtime in prefabs during asset changes
 
 ```{admonition} This version introduced breaking changes!
 :class: warning
