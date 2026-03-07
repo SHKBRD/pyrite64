@@ -1,0 +1,70 @@
+{
+  "obj": {
+    "children": [],
+    "components": [
+      {
+        "data": {
+          "culling": false,
+          "layerIdx": 0,
+          "material": {
+            "depth": 0,
+            "env": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "fresnel": 0,
+            "fresnelColor": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "lighting": false,
+            "prim": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "setDepth": false,
+            "setEnv": false,
+            "setFresnel": false,
+            "setLighting": false,
+            "setPrim": false
+          },
+          "meshFilter": "",
+          "model": 11040150197012739960
+        },
+        "id": 1,
+        "name": "Model (Static)",
+        "uuid": 16402069749826053520
+      }
+    ],
+    "enabled": true,
+    "id": 2,
+    "name": "Point",
+    "pos": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "propOverrides": {},
+    "rot": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "selectable": true,
+    "uuid": 936170864,
+    "uuidPrefab": 0
+  },
+  "uuid": 3719891925
+}

@@ -11,3 +11,6 @@ Makefile
 assets/p64
 src/p64
 engine
+
+# VSCode project folder
+.vscode/
