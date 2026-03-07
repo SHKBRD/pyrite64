@@ -1,6 +1,9 @@
 #include "script/userScript.h"
 #include "scene/sceneManager.h"
 #include "../p64/assetTable.h"
+
+#include "scene/components/model.h"
+#include <t3d/t3dmodel.h>
 #include <libdragon.h>
 #include <vi/swapChain.h>
 
@@ -26,7 +29,7 @@ namespace P64::Script::C7D3D67FA276A9FE
     const int8_t times=8;
     float magnitude = 100.0f;
     
-    bool generatingPath=false;
+    uint8_t generatingPath=0;
     int8_t order[8];
     uint16_t pathPoints[8];
     float_t cz = 0.0;
@@ -81,9 +84,31 @@ namespace P64::Script::C7D3D67FA276A9FE
     return;
   }
 
+  void movePointModelUVs(Object& focusPoint, int8_t pointNumber) {
+    T3DModel* model = focusPoint.getComponent<Comp::Model>()->model;
+    T3DVertPacked* verts = t3d_model_get_vertices(model);
+    
+    float_t xOff = ((pointNumber-1)%4)/4.0;
+    float_t yOff = ((pointNumber-1)/4)/2.0;
+    xOff*=64;
+    yOff*=32;
+    int16_t uvXoff = (int16_t)(xOff * (1 << 5));
+    int16_t uvYoff = (int16_t)(yOff * (1 << 5));
+    
+
+    for (uint8_t i=0; i<model->totalVertCount/2; ++i) {
+      verts[i].stA[0]+=uvXoff;
+      verts[i].stA[1]+=uvYoff;
+      verts[i].stB[0]+=uvXoff;
+      verts[i].stB[1]+=uvYoff;
+    }
+  }
+
   void updatePathPointModels(Object& obj, Data *data) {
     for (int8_t i=0; i < data->times; i++) {
-
+      Object* focusPoint = obj.getScene().getObjectById(data->pathPoints[i]);
+      int8_t pointNumber = data->order[i];
+      movePointModelUVs(*focusPoint, pointNumber);
     }
   }
 
@@ -105,13 +130,12 @@ namespace P64::Script::C7D3D67FA276A9FE
     // clean-up, this is called when the object gets deleted
   }
 
-  
-
   void update(Object& obj, Data *data, float deltaTime)
   {
     // this is called once every frame, put your main logic here
     if (data->generatingPath && isPathReady(obj, data)) {
       updatePathPointModels(obj, data);
+      data->generatingPath = false;
     }
   }
 
