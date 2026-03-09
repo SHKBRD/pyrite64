@@ -21,6 +21,7 @@ namespace
     builder.set("name", obj.name);
     builder.set("uuid", obj.uuid);
 
+    builder.set("scalarScale", obj.scalarScale);
     builder.set("selectable", obj.selectable);
     builder.set("enabled", obj.enabled);
 
@@ -92,6 +93,7 @@ void Project::Object::deserialize(Scene *scene, nlohmann::json &doc)
   name = doc["name"];
   uuid = doc["uuid"];
 
+  scalarScale = doc.value("scalarScale", false);
   selectable = doc.value("selectable", true);
   enabled = doc.value("enabled", true);
 

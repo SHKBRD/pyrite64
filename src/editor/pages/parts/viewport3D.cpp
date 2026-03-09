@@ -5,6 +5,7 @@
 #include "viewport3D.h"
 
 #include "imgui.h"
+#include "../../imgui/theme.h"
 #include "ImGuizmo.h"
 #include "ImViewGuizmo.h"
 #include "../../../context.h"
@@ -180,12 +181,6 @@ Editor::Viewport3D::Viewport3D()
 
   meshSprites = std::make_shared<Renderer::Mesh>();
   objSprites.setMesh(meshSprites);
-
-  auto &gizStyle = ImViewGuizmo::GetStyle();
-  gizStyle.scale = 0.5f;
-  gizStyle.circleRadius = 19.0f;
-  gizStyle.labelSize = 1.9f;
-  gizStyle.labelColor = IM_COL32(0,0,0,0xFF);
 }
 
 Editor::Viewport3D::~Viewport3D() {
@@ -265,10 +260,23 @@ void Editor::Viewport3D::onRenderPass(SDL_GPUCommandBuffer* cmdBuff, Renderer::S
   meshSprites->recreate(renderScene);
 
   renderScene.getPipeline("lines").bind(renderPass3D);
-  if (showGrid) {
-    objGrid.draw(renderPass3D, cmdBuff);
-  }
+
+  if(showGrid)objGrid.draw(renderPass3D, cmdBuff);
   objLines.draw(renderPass3D, cmdBuff);
+
+  // hack to get thicker lines with AA, just draw again with a 1px offset in screen-space
+  if(ctx.prefs.renderFactorAA > 1.0f) {
+    auto oldMat = uniGlobal.projMat[2];
+    uniGlobal.projMat[2][0] += 1.0f / uniGlobal.screenSize.x;
+    uniGlobal.projMat[2][1] -= 1.0f / uniGlobal.screenSize.y;
+    SDL_PushGPUVertexUniformData(cmdBuff, 0, &uniGlobal, sizeof(uniGlobal));
+
+    if(showGrid)objGrid.draw(renderPass3D, cmdBuff);
+    objLines.draw(renderPass3D, cmdBuff);
+
+    uniGlobal.projMat[2] = oldMat;
+    SDL_PushGPUVertexUniformData(cmdBuff, 0, &uniGlobal, sizeof(uniGlobal));
+  }
 
   renderScene.getPipeline("sprites").bind(renderPass3D);
 
@@ -284,12 +292,21 @@ void Editor::Viewport3D::onCopyPass(SDL_GPUCommandBuffer* cmdBuff, SDL_GPUCopyPa
 
 void Editor::Viewport3D::onPostRender(Renderer::Scene &renderScene) {
   if (pickedObjID.isRequested()) {
-    pickedObjID.setResult(fb.readObjectID(mousePosClick.x, mousePosClick.y));
+    pickedObjID.setResult(fb.readObjectID(
+      mousePosClick.x * ctx.prefs.renderFactorAA,
+      mousePosClick.y * ctx.prefs.renderFactorAA
+    ));
   }
 }
 
 void Editor::Viewport3D::draw()
 {
+  auto &gizStyle = ImViewGuizmo::GetStyle();
+  gizStyle.scale = 0.5f * ImGui::Theme::zoomFactor;
+  gizStyle.circleRadius = 19.0f;
+  gizStyle.labelSize = 1.9f / ImGui::Theme::zoomFactor;
+  gizStyle.labelColor = IM_COL32(0,0,0,0xFF);
+
   camera.update();
 
   auto scene = ctx.project->getScenes().getLoadedScene();
@@ -328,21 +345,28 @@ void Editor::Viewport3D::draw()
   }
   auto obj = scene->getObjectByUUID(ctx.selObjectUUID);
 
-  constexpr float BAR_HEIGHT = 26.0f;
+  float BAR_HEIGHT = 26_px;
 
   auto currSize = ImGui::GetContentRegionAvail();
+
   auto currPos = ImGui::GetWindowPos();
-  if (currSize.x < 64)currSize.x = 64;
-  if (currSize.y < 64)currSize.y = 64;
+  if (currSize.x < 64_px)currSize.x = 64_px;
+  if (currSize.y < 64_px)currSize.y = 64_px;
   currSize.y -= BAR_HEIGHT;
 
-  fb.resize((int)currSize.x, (int)currSize.y);
-  camera.screenSize = {currSize.x, currSize.y};
+  currSize.x = floorf(currSize.x);
+  currSize.y = floorf(currSize.y);
+
+  // Since we can't use MSAA directly, just render at higher res here
+  auto renderSize = currSize * ctx.prefs.renderFactorAA;
+
+  fb.resize((int)renderSize.x, (int)renderSize.y);
+  camera.screenSize = {renderSize.x, renderSize.y};
 
   auto &io = ImGui::GetIO();
   float deltaTime = io.DeltaTime;
 
-  ImVec2 gizPos{currPos.x + currSize.x - 50, currPos.y + 104};
+  ImVec2 gizPos{currPos.x + currSize.x - 50_px, currPos.y + 104_px};
 
   // mouse pos
   ImVec2 screenPos = ImGui::GetCursorScreenPos();
@@ -350,7 +374,7 @@ void Editor::Viewport3D::draw()
   mousePos.x -= screenPos.x;
   mousePos.y -= vpOffsetY;
 
-  float moveSpeed = ctx.moveSpeed * deltaTime;
+  float moveSpeed = ctx.prefs.moveSpeed * deltaTime;
 
   bool mouseHeldLeft = ImGui::IsMouseDown(ImGuiMouseButton_Left);
   bool mouseHeldRight = ImGui::IsMouseDown(ImGuiMouseButton_Right);
@@ -432,14 +456,14 @@ void Editor::Viewport3D::draw()
 
   if(!ImGui::GetIO().WantTextInput)
   {
-    if(ImGui::IsKeyPressed(ctx.keymap.toggleOrtho))
+    if(ImGui::IsKeyPressed(ctx.prefs.keymap.toggleOrtho))
     {
       camera.isOrtho = !camera.isOrtho;
     }
 
     // Handle object deletion when Delete is pressed while the viewport is focused and an object is selected
     bool deletedSelection = false;
-    if (ImGui::IsWindowFocused() && obj && ImGui::IsKeyPressed(ctx.keymap.deleteObject)) {
+    if (ImGui::IsWindowFocused() && obj && ImGui::IsKeyPressed(ctx.prefs.keymap.deleteObject)) {
       UndoRedo::getHistory().markChanged("Delete Object");
       if (Editor::SelectionUtils::deleteSelectedObjects(*scene)) {
         deletedSelection = true;
@@ -453,12 +477,12 @@ void Editor::Viewport3D::draw()
 
     if (newMouseDown) {
       glm::vec3 moveDir = {0,0,0};
-      if (ImGui::IsKeyDown(ctx.keymap.moveForward))moveDir.z = -moveSpeed;
-      if (ImGui::IsKeyDown(ctx.keymap.moveBack))moveDir.z = moveSpeed;
-      if (ImGui::IsKeyDown(ctx.keymap.moveLeft))moveDir.x = -moveSpeed;
-      if (ImGui::IsKeyDown(ctx.keymap.moveRight))moveDir.x = moveSpeed;
-      if (ImGui::IsKeyDown(ctx.keymap.moveDown))moveDir.y = -moveSpeed;
-      if (ImGui::IsKeyDown(ctx.keymap.moveUp))moveDir.y = moveSpeed;
+      if (ImGui::IsKeyDown(ctx.prefs.keymap.moveForward))moveDir.z = -moveSpeed;
+      if (ImGui::IsKeyDown(ctx.prefs.keymap.moveBack))moveDir.z = moveSpeed;
+      if (ImGui::IsKeyDown(ctx.prefs.keymap.moveLeft))moveDir.x = -moveSpeed;
+      if (ImGui::IsKeyDown(ctx.prefs.keymap.moveRight))moveDir.x = moveSpeed;
+      if (ImGui::IsKeyDown(ctx.prefs.keymap.moveDown))moveDir.y = -moveSpeed;
+      if (ImGui::IsKeyDown(ctx.prefs.keymap.moveUp))moveDir.y = moveSpeed;
 
       if(moveDir != glm::vec3{0,0,0}) {
         camera.velocity = camera.rot * moveDir;
@@ -466,10 +490,10 @@ void Editor::Viewport3D::draw()
     } else {
       if(!ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
       {
-        if (ImGui::IsKeyDown(ctx.keymap.gizmoTranslate))gizmoOp = 0;
-        if (ImGui::IsKeyDown(ctx.keymap.gizmoRotate))gizmoOp = 1;
-        if (ImGui::IsKeyDown(ctx.keymap.gizmoScale))gizmoOp = 2;
-        if (ImGui::IsKeyPressed(ctx.keymap.focusObject))camera.focusSelection(ctx);
+        if (ImGui::IsKeyDown(ctx.prefs.keymap.gizmoTranslate))gizmoOp = 0;
+        if (ImGui::IsKeyDown(ctx.prefs.keymap.gizmoRotate))gizmoOp = 1;
+        if (ImGui::IsKeyDown(ctx.prefs.keymap.gizmoScale))gizmoOp = 2;
+        if (ImGui::IsKeyPressed(ctx.prefs.keymap.focusObject))camera.focusSelection(ctx);
       }
     }
   }
@@ -484,15 +508,15 @@ void Editor::Viewport3D::draw()
     {
       if (std::fmod(std::abs(wheel.x), 1.0f) == 0 && std::fmod(std::abs(wheel.y), 1.0f) == 0) {
         //actual wheel or pinch gesture
-        float wheelSpeed = (isShiftDown ? 4.0f : 1.0f) * ctx.zoomSpeed;
+        float wheelSpeed = (isShiftDown ? 4.0f : 1.0f) * ctx.prefs.zoomSpeed;
         camera.zoomSpeed += wheel.y * wheelSpeed;
       } else {
-        if (ctx.invertWheelY) wheel.y *= -1;
+        if (ctx.prefs.invertWheelY) wheel.y *= -1;
         //two finger swipe on trackpad
         if (isShiftDown) {
-          camera.moveDelta(wheel * ctx.panSpeed);
+          camera.moveDelta(wheel * ctx.prefs.panSpeed);
         } else {
-          camera.orbitDelta(wheel * ctx.lookSpeed);
+          camera.orbitDelta(wheel * ctx.prefs.lookSpeed);
         }
       }
     }
@@ -514,7 +538,7 @@ void Editor::Viewport3D::draw()
       GIZMO_LABELS[i],
       gizmoOp == i,
       i == 0, i == 2,
-      ImVec2(32,24)
+      ImVec2(32_px,24_px)
     )) {
       gizmoOp = i;
     }
@@ -523,29 +547,29 @@ void Editor::Viewport3D::draw()
 
   ImGui::SameLine();
 
-  if (ConnectedToggleButton(ICON_MDI_WEB, isTransWorld, true, true, ImVec2(32,24))) {
+  if (ConnectedToggleButton(ICON_MDI_WEB, isTransWorld, true, true, ImVec2(32_px,24_px))) {
     isTransWorld = !isTransWorld;
   }
   ImGui::SetItemTooltip("Show %s Space", isTransWorld ? "Local" : "World");
 
   ImGui::SameLine();
-  ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 12);
+  ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 12_px);
 
-  if(ConnectedToggleButton(ICON_MDI_GRID, showGrid, true, true, ImVec2(32,24))) {
+  if(ConnectedToggleButton(ICON_MDI_GRID, showGrid, true, true, ImVec2(32_px, 24_px))) {
     showGrid = !showGrid;
   }
   ImGui::SetItemTooltip("%s Grid", showGrid ? "Hide" : "Show");
 
   ImGui::SameLine();
-  ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 4);
-  if(ConnectedToggleButton(ICON_MDI_LANDSLIDE_OUTLINE, showCollMesh, true, true, ImVec2(32,24))) {
+  ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 4_px);
+  if(ConnectedToggleButton(ICON_MDI_LANDSLIDE_OUTLINE, showCollMesh, true, true, ImVec2(32_px, 24_px))) {
     showCollMesh = !showCollMesh;
   }
   ImGui::SetItemTooltip("%s Collision Mesh", showCollMesh ? "Hide" : "Show");
 
   ImGui::SameLine();
-  ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 4);
-  if(ConnectedToggleButton(ICON_MDI_CYLINDER, showCollObj, true, true, ImVec2(32,24))) {
+  ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 4_px);
+  if(ConnectedToggleButton(ICON_MDI_CYLINDER, showCollObj, true, true, ImVec2(32_px,24_px))) {
     showCollObj = !showCollObj;
   }
   ImGui::SetItemTooltip("%s Collision Bodies", showCollObj ? "Hide" : "Show");
@@ -573,9 +597,17 @@ void Editor::Viewport3D::draw()
   if (!newMouseDown)isMouseDown = false;
 
   currPos = ImGui::GetCursorScreenPos();
+  currPos.x = floorf(currPos.x);
+  currPos.y = floorf(currPos.y);
+  ImGui::SetCursorScreenPos(currPos);
+
   vpOffsetY = currPos.y;
 
-  ImGui::Image(ImTextureID(fb.getTexture()), {currSize.x, currSize.y});
+  auto tex = fb.getTexture();
+  ImGui::Image(ImTextureID(tex), {
+    (float)fb.getWidth() / ctx.prefs.renderFactorAA,
+    (float)fb.getHeight() / ctx.prefs.renderFactorAA
+  });
 
   if (ImGui::BeginDragDropTarget())
   {
@@ -668,7 +700,7 @@ void Editor::Viewport3D::draw()
       bool isOnlySelf = ImGui::IsKeyDown(ImGuiKey_LeftShift);
 
       // snap object to absolute grid
-      if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyPressed(ctx.keymap.snapObject))
+      if(ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyPressed(ctx.prefs.keymap.snapObject))
       {
         glm::vec3 pos = obj->pos.resolve(obj->propOverrides);
         pos.x = std::round(pos.x / snap.x) * snap.x;
@@ -677,10 +709,15 @@ void Editor::Viewport3D::draw()
         obj->pos.resolve(obj->propOverrides) = pos;
       }
 
+      auto op = GIZMO_OPS[gizmoOp];
+      if(op == ImGuizmo::OPERATION::SCALE && obj->scalarScale) {
+        op = ImGuizmo::OPERATION::SCALE_X;
+      }
+
       if(ImGuizmo::Manipulate(
         glm::value_ptr(uniGlobal.cameraMat),
         glm::value_ptr(uniGlobal.projMat),
-        GIZMO_OPS[gizmoOp],
+        op,
         isTransWorld ? ImGuizmo::MODE::WORLD : ImGuizmo::MODE::LOCAL,
         glm::value_ptr(gizmoMat),
         nullptr,

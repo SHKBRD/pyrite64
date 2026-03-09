@@ -17,7 +17,7 @@
 #include "editor/actions.h"
 #include "editor/window.h"
 #include "editor/imgui/theme.h"
-#include "editor/pages/editorMain.h"
+#include "editor/pages/launcher.h"
 #include "editor/pages/editorScene.h"
 #include "editor/imgui/notification.h"
 #include "renderer/scene.h"
@@ -220,11 +220,13 @@ int main(int argc, char** argv)
     return -1;
   }
 
+  ctx.forceVSync = false;
   SDL_GPUPresentMode presentMode = SDL_GPU_PRESENTMODE_IMMEDIATE;
   if(!SDL_WindowSupportsGPUPresentMode(ctx.gpu, ctx.window, presentMode))
   {
     printf("Warning: SDL_GPU_PRESENTMODE_IMMEDIATE not supported, falling back to SDL_GPU_PRESENTMODE_VSYNC\n");
     presentMode = SDL_GPU_PRESENTMODE_VSYNC;
+    ctx.forceVSync = true;
   }
 
   SDL_SetGPUSwapchainParameters(ctx.gpu, ctx.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, presentMode);
@@ -255,7 +257,6 @@ int main(int argc, char** argv)
   // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
   ImGui::Theme::setTheme();
-  ImGui::Theme::setZoom();
   ImGui::Theme::update();
 
   // Setup Platform/Renderer backends
@@ -274,10 +275,10 @@ int main(int argc, char** argv)
 
     Renderer::Scene scene{};
     ctx.scene = &scene;
-    Editor::Main editorMain{ctx.gpu};
+    Editor::Launcher editorMain{ctx.gpu};
     ctx.editorScene = std::make_unique<Editor::Scene>();
 
-    ctx.loadPrefs();
+    ctx.prefs.load();
     if(!CLI::getProjectPath().empty())
     {
       if(!Editor::Actions::call(Editor::Actions::Type::PROJECT_OPEN, CLI::getProjectPath())) {
@@ -291,11 +292,14 @@ int main(int argc, char** argv)
     while(!done) {
 
       auto frameStart = SDL_GetTicksNS();
+
+      ImGui::Theme::update();
+
       //printf("Frame Start | Time: %.2fms\n", ImGui::GetIO().DeltaTime * 1000.0f);
-      SDL_Event event;
+      SDL_Event event{};
       while (SDL_PollEvent(&event))
       {
-        //convert pinch events to whole number mouse wheel events to mimic windows 
+        //convert pinch events to whole number mouse wheel events to mimic windows
         if (event.type == SDL_EVENT_PINCH_BEGIN) {
           lastPinch = 1;
         } else if (event.type == SDL_EVENT_PINCH_UPDATE) {
@@ -349,37 +353,25 @@ int main(int argc, char** argv)
         // Check: io.WantCaptureMouse, io.WantCaptureKeyboard
       }
 
-      if(!ImGui::GetIO().WantTextInput)
-      {
-        if (ImGui::IsKeyChordPressed(ctx.keymap.copy)) {
-          Editor::Actions::call(Editor::Actions::Type::COPY);
-        }
-        if (ImGui::IsKeyChordPressed(ctx.keymap.paste)) {
-          Editor::Actions::call(Editor::Actions::Type::PASTE);
-        }
-        if (ImGui::IsKeyChordPressed(ctx.keymap.save)) {
-          if (ctx.project) {
-            ctx.project->save();
-            ctx.editorScene->save();
-          }
-        }
-      }
-
-      if (ImGui::IsKeyChordPressed(ctx.keymap.build)) {
+      if (ImGui::IsKeyChordPressed(ctx.prefs.keymap.build)) {
         Editor::Actions::call(Editor::Actions::Type::PROJECT_BUILD);
       }
 
-      if (ImGui::IsKeyChordPressed(ctx.keymap.buildAndRun)) {
+      if (ImGui::IsKeyChordPressed(ctx.prefs.keymap.buildAndRun)) {
         Editor::Actions::call(Editor::Actions::Type::PROJECT_BUILD, "run");
       }
 
-      if (ImGui::IsKeyChordPressed(ctx.keymap.reloadAssets)) {
+      if (ImGui::IsKeyChordPressed(ctx.prefs.keymap.reloadAssets)) {
         Editor::Actions::call(Editor::Actions::Type::ASSETS_RELOAD);
       }
 
-      if (ImGui::IsKeyChordPressed(ctx.keymap.toggleVSync))
+      if(ctx.forceVSync)ctx.prefs.useVSync = true;
+      SDL_GPUPresentMode newPresentMode = ctx.prefs.useVSync
+        ? SDL_GPU_PRESENTMODE_VSYNC
+        : SDL_GPU_PRESENTMODE_IMMEDIATE;
+      if (newPresentMode != presentMode)
       {
-        presentMode = (presentMode == SDL_GPU_PRESENTMODE_VSYNC) ? SDL_GPU_PRESENTMODE_IMMEDIATE : SDL_GPU_PRESENTMODE_VSYNC;
+        presentMode = newPresentMode;
         printf("Switched Present Mode to: %s\n", (presentMode == SDL_GPU_PRESENTMODE_VSYNC) ? "VSync" : "Immediate");
         SDL_SetGPUSwapchainParameters(ctx.gpu, ctx.window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, presentMode);
       }
@@ -401,6 +393,38 @@ int main(int argc, char** argv)
       ImGui_ImplSDLGPU3_NewFrame();
       ImGui_ImplSDL3_NewFrame();
       ImGui::NewFrame();
+
+      if(!ImGui::GetIO().WantTextInput)
+      {
+        int mouseWheelY = ImGui::GetIO().MouseWheel;
+        if(ImGui::IsKeyChordPressed(ctx.prefs.keymap.zoomIn)) {
+          // special handling for zoom, the default keybind uses CTRL+SCROLL,
+          // so check direction here
+          int zoom = 1;
+          if(mouseWheelY > 0)zoom = 1;
+          if(mouseWheelY < 0)zoom = -1;
+          ImGui::Theme::changeZoom(zoom);
+        }
+        else if(ImGui::IsKeyChordPressed(ctx.prefs.keymap.zoomOut)) {
+          int zoom = -1;
+          if(mouseWheelY > 0)zoom = 1;
+          if(mouseWheelY < 0)zoom = -1;
+          ImGui::Theme::changeZoom(zoom);
+        }
+
+        if (ImGui::IsKeyChordPressed(ctx.prefs.keymap.copy)) {
+          Editor::Actions::call(Editor::Actions::Type::COPY);
+        }
+        if (ImGui::IsKeyChordPressed(ctx.prefs.keymap.paste)) {
+          Editor::Actions::call(Editor::Actions::Type::PASTE);
+        }
+        if (ImGui::IsKeyChordPressed(ctx.prefs.keymap.save)) {
+          if (ctx.project) {
+            ctx.project->save();
+            ctx.editorScene->save();
+          }
+        }
+      }
 
       uint64_t ticksSelf = SDL_GetTicksNS();
       scene.update();
@@ -424,7 +448,9 @@ int main(int argc, char** argv)
 
       if(presentMode != SDL_GPU_PRESENTMODE_VSYNC)
       {
-        uint64_t targetFrameTime = 16'666'666; // ~60 FPS
+        uint64_t targetFrameTime = 1'000'000'000 / (uint64_t)ctx.prefs.fpsLimit;
+        targetFrameTime -= 100'000;
+
         auto frameTime = SDL_GetTicksNS() - frameStart;
         if(frameTime < targetFrameTime) {
           SDL_DelayNS(targetFrameTime - frameTime);

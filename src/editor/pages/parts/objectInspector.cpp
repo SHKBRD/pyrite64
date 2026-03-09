@@ -11,6 +11,8 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
+
+#include "imgui_internal.h"
 #include "../../imgui/helper.h"
 #include "../../../context.h"
 #include "../../../project/component/components.h"
@@ -315,13 +317,63 @@ void Editor::ObjectInspector::draw() {
     }
   }
 
-  if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-    if (ImTable::start("Transform", obj.get())) {
+  if(ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+  {
+    if(ImTable::start("Transform", obj.get()))
+    {
       ImTable::addObjProp("Pos", srcObj->pos);
-      ImTable::addObjProp("Scale", srcObj->scale);
+
+      if(srcObj->scalarScale)
+      {
+        std::function<bool(glm::vec3*)> cb = [](glm::vec3 *val) -> bool {
+          bool res = ImTable::typedInput<float>(&val->x);
+          val->y = val->z = val->x;
+          return res;
+        };
+        ImTable::addObjProp("Scale", srcObj->scale, cb, nullptr);
+      } else {
+        ImTable::addObjProp("Scale", srcObj->scale);
+
+      // icon to toggle between XYZ and scalar scale
+      ImGui::SameLine();
+      }
+
+      // icon to toggle between XYZ and scalar scale
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 32_px);
+      if(ImGui::IconButton(srcObj->scalarScale ? ICON_MDI_LINK_VARIANT : ICON_MDI_LINK_VARIANT_OFF, {24_px, 24_px})) {
+        ImGui::ClearActiveID();
+        srcObj->scalarScale = !srcObj->scalarScale;
+      }
+      ImGui::SetItemTooltip(srcObj->scalarScale
+        ? "Change to XYZ Scale"
+        : "Change to Uniform Scale"
+      );
+
       ImTable::addObjProp("Rot", srcObj->rot);
+
+      // icon to toggle between quaternion and euler
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 32_px);
+      if(ImGui::IconButton(ctx.prefs.showRotAsEuler ? ICON_MDI_AXIS_Z_ROTATE_CLOCKWISE : ICON_MDI_SPHERE, {24_px, 24_px})) {
+        ImGui::ClearActiveID();
+        ctx.prefs.showRotAsEuler = !ctx.prefs.showRotAsEuler;
+        ctx.prefs.save();
+      }
+      ImGui::SetItemTooltip(ctx.prefs.showRotAsEuler
+        ? "Change to Quaternion"
+        : "Change to Euler (degrees)"
+      );
+
       ImTable::end();
     }
+  }
+
+  // enforce single scale
+  if(srcObj->scalarScale)
+  {
+    auto &scale = srcObj->scale.resolve(srcObj->propOverrides);
+    scale.y = scale.z = scale.x;
   }
 
   uint64_t compDelUUID = 0;
@@ -387,8 +439,8 @@ void Editor::ObjectInspector::draw() {
   }
 
   const char* addLabel = ICON_MDI_PLUS_BOX_OUTLINE " Add Component";
-  ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 4);
-  ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(addLabel).x) * 0.5f - 4);
+  ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 4_px);
+  ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(addLabel).x) * 0.5f - 4_px);
   if (ImGui::Button(addLabel)) {
     ImGui::OpenPopup("CompSelect");
   }

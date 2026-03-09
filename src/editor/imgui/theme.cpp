@@ -3,53 +3,103 @@
 * @license MIT
 */
 #include "theme.h"
+
+#include <array>
+
 #include "imgui.h"
 #include "IconsMaterialDesignIcons.h"
 #include "ImGuizmo.h"
+#include "notification.h"
+
+constinit float ImGui::Theme::zoomFactor = 1.0f;
 
 namespace
 {
-  constinit ImFont* fontMono{nullptr};
   constexpr ImVec4 COLOR_HIGHLIGHT{1.0f, 0.5f, 0.0f, 1.0f};
+  constexpr std::array<float, 12> ZOOM_VALUES{
+    1.0f / 2.0f,
+    1.0f / 1.75f,
+    1.0f / 1.50f,
+    1.0f / 1.25f,
+    1.0f,
+    1.25f,
+    1.50f,
+    1.75f,
+    2.0f,
+    2.5f,
+    3.0f,
+    4.0f
+  };
+
+  constinit ImFont* fontMono{nullptr};
+  constinit bool needsUpdate{true};
+  constinit int zoomLevel{4};
 
   void loadFonts(float contentScale = 1.0f)
   {
-    if(fontMono)return;
-
-    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(contentScale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-    style.FontScaleDpi = contentScale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
-    style.FontSizeBase = 15.0f;
-    ImFont* font = io.Fonts->AddFontFromFileTTF("./data/Altinn-DINExp.ttf");
-    IM_ASSERT(font != nullptr);
+    if(!fontMono)
+    {
+      ImGuiIO& io = ImGui::GetIO();
+      style.ScaleAllSizes(1.0f);
+      style.FontScaleDpi = 1.0f;
 
-    static const ImWchar icons_ranges[] = { ICON_MIN_MDI, ICON_MAX_16_MDI, 0 };
-    ImFontConfig icons_config;
-    icons_config.MergeMode = true;
-    icons_config.PixelSnapH = true;
-    icons_config.GlyphMinAdvanceX = 16.0f;
-    font = io.Fonts->AddFontFromFileTTF("./data/materialdesignicons-webfont.ttf", 16, &icons_config, icons_ranges);
-    IM_ASSERT(font != nullptr);
+      style.FontSizeBase = 15.0f;
+      ImFont* font = io.Fonts->AddFontFromFileTTF("./data/Altinn-DINExp.ttf");
+      IM_ASSERT(font != nullptr);
 
-    fontMono = io.Fonts->AddFontFromFileTTF("./data/GoogleSansCode.ttf", 16);
-    IM_ASSERT(fontMono != nullptr);
+      static const ImWchar icons_ranges[] = { ICON_MIN_MDI, ICON_MAX_16_MDI, 0 };
+      ImFontConfig icons_config;
+      icons_config.MergeMode = true;
+      icons_config.PixelSnapH = true;
+      icons_config.GlyphMinAdvanceX = 16.0f;
+      font = io.Fonts->AddFontFromFileTTF("./data/materialdesignicons-webfont.ttf", 16, &icons_config, icons_ranges);
+      IM_ASSERT(font != nullptr);
+
+      fontMono = io.Fonts->AddFontFromFileTTF("./data/GoogleSansCode.ttf", 16);
+      IM_ASSERT(fontMono != nullptr);
+    }
+
+    style.FontSizeBase = 15.0f * contentScale;
   }
 }
 
 void ImGui::Theme::setTheme(const std::string &name)
 {
-
+  needsUpdate = true;
 }
 
-void ImGui::Theme::setZoom(float zoomLevel)
+void ImGui::Theme::changeZoom(int levelDirection)
 {
-
+  setZoomLevel(zoomLevel + levelDirection);
+  Editor::Noti::showAction("Zoom: " + std::to_string((int)(zoomFactor * 100)) + "%");
 }
+
+float ImGui::Theme::getZoom()
+{
+  return zoomFactor;
+}
+
+int ImGui::Theme::getZoomLevel()
+{
+  return zoomLevel;
+}
+
+void ImGui::Theme::setZoomLevel(int level)
+{
+  zoomLevel = std::max(0, std::min((int)ZOOM_VALUES.size() - 1, level));
+  zoomFactor = ZOOM_VALUES[zoomLevel];
+  needsUpdate = true;
+}
+
 
 void ImGui::Theme::update()
 {
+  if(!needsUpdate)return;
+  needsUpdate = false;
+
+  printf("Updating ImGui theme with zoom level: %.2f\n", zoomFactor);
   ImGuiStyle &style = ImGui::GetStyle();
   style = ImGuiStyle();
   ImVec4 *colors = style.Colors;
@@ -143,14 +193,8 @@ void ImGui::Theme::update()
 
   ImGuizmo::SetGizmoSizeClipSpace(0.14f);
 
-  loadFonts(1.0f);
-
-  // zoom handling
-  /*float prevZoomFactor = 1.0f;
-  float zoomFactor = 2.0f;
-  io.FontGlobalScale = zoomFactor; // scales all text
-  ImGui::GetStyle().ScaleAllSizes(zoomFactor / prevZoomFactor); // scales all widget sizes, paddings, etc.
-  prevZoomFactor = zoomFactor;*/
+  loadFonts(zoomFactor);
+  GetStyle().ScaleAllSizes(zoomFactor);
 }
 
 ImFont* ImGui::Theme::getFontMono() {

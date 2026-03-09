@@ -52,11 +52,12 @@ nlohmann::json Editor::Input::Keymap::serialize(KeymapPreset preset) const {
   auto writeChord = [&](const char* name, ImGuiKeyChord currentChord, ImGuiKeyChord defaultChord) {
     if (currentChord != defaultChord) json.set(name, GetKeyChordName(currentChord));
   };
-  
+
+  writeChord("zoomIn",       zoomIn,         defaultKeymap.zoomIn);
+  writeChord("zoomOut",      zoomOut,        defaultKeymap.zoomOut);
   writeChord("save",         save,           defaultKeymap.save);
   writeChord("copy",         copy,           defaultKeymap.copy);
   writeChord("paste",        paste,          defaultKeymap.paste);
-  writeChord("toggleVSync",  toggleVSync,    defaultKeymap.toggleVSync);
   writeChord("reloadAssets", reloadAssets,   defaultKeymap.reloadAssets);
   writeChord("build",        build,          defaultKeymap.build);
   writeChord("buildAndRun",  buildAndRun,    defaultKeymap.buildAndRun);
@@ -94,10 +95,11 @@ void Editor::Input::Keymap::deserialize(const nlohmann::json& parent, KeymapPres
     return (chord == ImGuiKey_None) ? defaultChord : chord;
   };
 
+  zoomIn         = readChord("zoomIn",       defaultKeymap.zoomIn);
+  zoomOut        = readChord("zoomOut",      defaultKeymap.zoomOut);
   save           = readChord("save",         defaultKeymap.save);
   copy           = readChord("copy",         defaultKeymap.copy);
   paste          = readChord("paste",        defaultKeymap.paste);
-  toggleVSync    = readChord("toggleVSync",  defaultKeymap.toggleVSync);
   reloadAssets   = readChord("reloadAssets", defaultKeymap.reloadAssets);
   build          = readChord("build",        defaultKeymap.build);
   buildAndRun    = readChord("buildAndRun",  defaultKeymap.buildAndRun);
@@ -114,4 +116,30 @@ void Editor::Input::Keymap::deserialize(const nlohmann::json& parent, KeymapPres
   gizmoScale     = readKey("gizmoScale",     defaultKeymap.gizmoScale);
   deleteObject   = readKey("deleteObject",   defaultKeymap.deleteObject);
   snapObject     = readKey("snapObject",     defaultKeymap.snapObject);
+}
+
+std::string Editor::Input::GetKeyChordName(ImGuiKeyChord key_chord)
+{
+  std::string result{};
+  ImGuiKey key = (ImGuiKey)(key_chord & ~ImGuiMod_Mask_);
+
+  if (key_chord & ImGuiMod_Ctrl) {
+#if defined(__APPLE__)
+    result += "Cmd+";
+#else
+    result += "Ctrl+";
+#endif
+  }
+  if (key_chord & ImGuiMod_Shift) result += "Shift+";
+  if (key_chord & ImGuiMod_Alt)   result += "Alt+";
+  if (key_chord & ImGuiMod_Super) result += "Super+";
+
+  // Append the base key name
+  if (key != ImGuiKey_None || key_chord == ImGuiKey_None) {
+    const char* key_name = ImGui::GetKeyName(key);
+    if (key_name) result += key_name;
+  } else if (!result.empty()) {
+    result.pop_back();
+  }
+  return result;
 }

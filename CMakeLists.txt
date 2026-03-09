@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project(pyrite64 VERSION 0.5.0)
+project(pyrite64 VERSION 0.6.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -120,7 +120,7 @@ add_executable(pyrite64 src/main.cpp
         src/renderer/vertex.h
         src/context.h
         src/project/project.h
-        src/editor/pages/editorMain.cpp
+        src/editor/pages/launcher.cpp
         src/renderer/texture.cpp
         src/renderer/texture.h
         src/project/project.cpp
@@ -178,8 +178,7 @@ add_executable(pyrite64 src/main.cpp
         src/editor/pages/parts/memoryDashboard.cpp
         src/editor/pages/parts/projectSettings.h
         src/editor/pages/parts/projectSettings.cpp
-        src/editor/pages/parts/preferences.h
-        src/editor/pages/parts/preferences.cpp
+        src/editor/pages/parts/preferenceOverlay.cpp
         src/editor/pages/parts/sceneGraph.h
         src/editor/pages/parts/sceneGraph.cpp
         src/project/scene/object.h
@@ -262,6 +261,9 @@ add_executable(pyrite64 src/main.cpp
         src/utils/network.cpp
         src/utils/updater.h
         src/utils/updater.cpp
+        src/editor/preferences.h
+        src/editor/preferences.h
+        src/editor/preferences.cpp
 )
 
 target_include_directories(pyrite64 PRIVATE
