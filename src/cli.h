@@ -15,5 +15,6 @@ namespace CLI
   };
 
   const std::string& getProjectPath();
+  bool isExperimentalEnabled();
   Result run(int argc, char** argv);
 };

@@ -154,7 +154,7 @@ namespace Project::Component::Model
           for(auto idx : data.filter.cache) {
             ImGui::Text("%s@%s",
               t3dm->t3dmData.models[idx].name.c_str(),
-              t3dm->t3dmData.models[idx].material.name.c_str()
+              t3dm->t3dmData.models[idx].materialName.c_str()
             );
           }
         }

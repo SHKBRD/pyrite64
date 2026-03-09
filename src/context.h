@@ -33,6 +33,8 @@ struct Context
   SDL_GPUDevice *gpu{nullptr};
   std::unique_ptr<Editor::Scene> editorScene{nullptr};
   bool forceVSync{false};
+  bool experimentalFeatures{false};
+  bool wantsProjectClose{false};
 
   std::string newerVersion{};
   std::atomic_bool hasNewerVersion{false};

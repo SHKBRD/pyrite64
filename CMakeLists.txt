@@ -13,6 +13,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
         "Run: cmake --preset <name>")
 endif()
 
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
+
+
 # set(SDL_SHARED ON)
 # set(SDL_STATIC ON)
 
@@ -264,6 +268,7 @@ add_executable(pyrite64 src/main.cpp
         src/editor/preferences.h
         src/editor/preferences.h
         src/editor/preferences.cpp
+        src/editor/pages/parts/assets/modelEditor.cpp
 )
 
 target_include_directories(pyrite64 PRIVATE

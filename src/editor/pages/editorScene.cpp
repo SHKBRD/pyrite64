@@ -19,6 +19,7 @@
 #include "../../utils/updater.h"
 #include "../imgui/notification.h"
 #include "../imgui/theme.h"
+#include "parts/assets/modelEditor.h"
 
 namespace
 {
@@ -47,6 +48,13 @@ Editor::Scene::Scene()
 Editor::Scene::~Scene()
 {
   Editor::Actions::registerAction(Editor::Actions::Type::OPEN_NODE_GRAPH, nullptr);
+}
+
+void Editor::Scene::openModelEditor(uint64_t assetUUID)
+{
+  modelEditors.push_back(
+    std::make_unique<ModelEditor>(assetUUID)
+  );
 }
 
 void Editor::Scene::draw()
@@ -108,6 +116,7 @@ void Editor::Scene::draw()
     // Right
     ImGui::DockBuilderDockWindow("Asset", dockRightID);
     ImGui::DockBuilderDockWindow("Object", dockRightID);
+    ImGui::DockBuilderDockWindow("Model", dockRightID);
 
     // Bottom
     ImGui::DockBuilderDockWindow("Files", dockBottomID);
@@ -177,6 +186,12 @@ void Editor::Scene::draw()
       }
     }
     ImGui::EndPopup();
+  }
+
+  for(auto &modelEditor : modelEditors) {
+    if (!modelEditor->draw(dockSpaceID)) {
+      //delIndices.push_back(&modelEditor - &modelEditors[0]);
+    }
   }
 
   ImGui::Begin("Object");

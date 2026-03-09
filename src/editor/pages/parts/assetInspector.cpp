@@ -4,6 +4,7 @@
 */
 #include "assetInspector.h"
 #include "imgui.h"
+#include "../editorScene.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include "../../imgui/helper.h"
 #include "../../../context.h"
@@ -122,10 +123,49 @@ void Editor::AssetInspector::draw() {
       for (auto &model : asset->t3dmData.models) {
         triCount += model.triangles.size();
       }
-      ImGui::Text("Meshes: %d", static_cast<int>(asset->t3dmData.models.size()));
-      ImGui::Text("Triangles: %d", triCount);
-      ImGui::Text("Bones: %d", static_cast<int>(asset->t3dmData.skeletons.size()));
-      ImGui::Text("Animations: %d", static_cast<int>(asset->t3dmData.animations.size()));
+
+      uint32_t boneCount = 0;
+      for(auto &skel : asset->t3dmData.skeletons) {
+        boneCount += skel.children.size();
+      }
+
+      ImGui::BeginTable("ModelInfo", 2);
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::AlignTextToFramePadding();
+        ImGui::Text("Meshes");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%d", static_cast<int>(asset->t3dmData.models.size()));
+
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::AlignTextToFramePadding();
+        ImGui::Text("Triangles");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%d", triCount);
+
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::AlignTextToFramePadding();
+        ImGui::Text("Bones");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%d", boneCount);
+
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::AlignTextToFramePadding();
+        ImGui::Text("Animations");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%d", static_cast<int>(asset->t3dmData.animations.size()));
+
+      ImGui::EndTable();
+
+      if(ctx.experimentalFeatures)
+      {
+        if(ImGui::Button(ICON_MDI_PENCIL " Open Model Editor")) {
+          ctx.editorScene->openModelEditor(asset->getUUID());
+        }
+      }
     }
   }
 }

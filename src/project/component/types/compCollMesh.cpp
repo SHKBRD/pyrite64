@@ -155,7 +155,7 @@ namespace Project::Component::CollMesh
         for(auto idx : data.filter.cache) {
           ImGui::Text("%s@%s",
             selModel->t3dmData.models[idx].name.c_str(),
-            selModel->t3dmData.models[idx].material.name.c_str()
+            selModel->t3dmData.models[idx].materialName.c_str()
           );
         }
 

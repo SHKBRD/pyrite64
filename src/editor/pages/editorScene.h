@@ -18,6 +18,8 @@
 
 namespace Editor
 {
+  class ModelEditor;
+
   class Scene
   {
     private:
@@ -25,6 +27,7 @@ namespace Editor
 
       // Editors
       std::vector<std::shared_ptr<NodeEditor>> nodeEditors{};
+      std::vector<std::shared_ptr<ModelEditor>> modelEditors{};
       PreferenceOverlay prefOverlay{};
       ProjectSettings projectSettings{};
       AssetsBrowser assetsBrowser{};
@@ -47,6 +50,8 @@ namespace Editor
     public:
       Scene();
       ~Scene();
+
+      void openModelEditor(uint64_t assetUUID);
 
       void draw();
       void save();

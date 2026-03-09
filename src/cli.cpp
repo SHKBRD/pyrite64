@@ -10,11 +10,17 @@
 namespace
 {
   std::string argProgPath{};
+  bool argExperimental{false};
 }
 
 const std::string& CLI::getProjectPath()
 {
   return argProgPath;
+}
+
+bool CLI::isExperimentalEnabled()
+{
+  return argExperimental;
 }
 
 CLI::Result CLI::run(int argc, char** argv)
@@ -28,6 +34,11 @@ CLI::Result CLI::run(int argc, char** argv)
   prog.add_argument("--cmd")
     .help("Command to run")
     .choices("build", "clean");
+
+  prog.add_argument("--experimental")
+    .help("Enable experimental features (may cause instability / break projects)")
+    .default_value(false)
+    .implicit_value(true);
 
   prog.add_argument("project")
     .default_value("")
@@ -44,6 +55,7 @@ CLI::Result CLI::run(int argc, char** argv)
     return Result::ERROR;
   }
 
+  argExperimental = prog["--experimental"] == true;
   argProgPath = prog.get<std::string>("project");
 
   if (prog["--cli"] == false) {

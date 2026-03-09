@@ -38,22 +38,27 @@ void Renderer::N64Mesh::fromT3DM(const T3DM::T3DMData &t3dmData, Project::AssetM
     part->indicesOffset = mesh.indices.size();
     part->indicesCount = model.triangles.size() * 3;
 
-    N64Material::convert(*part, model.material);
+    T3DM::Material matDummy{};
+    auto mat = t3dmData.materials.find(model.materialName);
+    if(mat != t3dmData.materials.end()) {
+      N64Material::convert(*part, mat->second);
+    }
+    const T3DM::Material &material = (mat != t3dmData.materials.end()) ? mat->second : matDummy;
 
     part->texBindings[0].texture = part->refTex0.lock()->getGPUTex();
     part->texBindings[0].sampler = texSamplerRepeat;
     part->texBindings[1] = part->texBindings[0];
 
-    if (!model.material.texA.texPath.empty()) {
-      auto texEntry = assetManager.getByPath(model.material.texA.texPath);
+    if (!material.texA.texPath.empty()) {
+      auto texEntry = assetManager.getByPath(material.texA.texPath);
       if (texEntry && texEntry->texture) {
         part->texBindings[0].texture = texEntry->texture->getGPUTex();
         part->refTex0 = texEntry->texture;
       }
     }
 
-    if (!model.material.texB.texPath.empty()) {
-      auto texEntry = assetManager.getByPath(model.material.texB.texPath);
+    if (!material.texB.texPath.empty()) {
+      auto texEntry = assetManager.getByPath(material.texB.texPath);
       if (texEntry && texEntry->texture) {
         part->texBindings[1].texture = texEntry->texture->getGPUTex();
         part->refTex1 = texEntry->texture;

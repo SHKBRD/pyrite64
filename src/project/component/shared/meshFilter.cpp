@@ -24,7 +24,7 @@ namespace Project::Component::Shared
     {
       auto fullName = mesh.name;
       if(withMaterial) {
-        fullName += "@" + mesh.material.name;
+        fullName += "@" + mesh.materialName;
       }
 
       int match_length{};
