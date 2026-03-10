@@ -1,3 +1,4 @@
+#include "fonts.h"
 #include "script/userScript.h"
 #include "scene/sceneManager.h"
 #include "../p64/assetTable.h"
@@ -21,20 +22,19 @@ namespace P64::Script::C7D3D67FA276A9FE
     //
     // Other types can be used but are not exposed in the editor.
 
-    [[P64::Name("Path Holder")]]
-    ObjectRef pathHolder;
-    [[P64::Name("Path Runner")]]
-    ObjectRef pathRunner;
-
     const int8_t times=8;
     float magnitude = 100.0f;
     
     uint8_t generatingPath=0;
     int8_t order[8];
-    uint16_t pathPoints[8];
+    uint16_t pathPointsIDs[8];
+
+    // debug variables
+    /*
     float_t cz = 0.0;
     float_t cy = 0.0;
     float_t p = 0.0;
+    */
   );
 
   // Fisher-Yates algorithm
@@ -53,8 +53,8 @@ namespace P64::Script::C7D3D67FA276A9FE
 
   void resetPathPoints(Object& obj, Data *data) {
     // pathHolder won't reference an object when this runs during startup
-    if (data->pathHolder != nullptr && data->pathHolder->hasChildren()) {
-      data->pathHolder->iterChildren([](Object* child) {
+    if (obj.hasChildren()) {
+      obj.iterChildren([](Object* child) {
          child->remove();
        });
     }
@@ -65,11 +65,16 @@ namespace P64::Script::C7D3D67FA276A9FE
     float_t zOff = cosf(progress*2*FM_PI)*data->magnitude;
     float_t yOff = sinf(progress*2*FM_PI)*data->magnitude;
     fm_vec3_t off{0.0, yOff, zOff};
+
+    // debug variables
+    /*
     data->cy = yOff;
     data->cz = zOff;
     data->p = progress;
+    */
+    
     off += obj.pos;
-    data->pathPoints[idx] = obj.getScene().addObject("point/Point.pf"_asset, off);
+    data->pathPointsIDs[idx] = obj.getScene().addObject("point/Point.pf"_asset, off);
   }
 
   void makePathPoints(Object& obj, Data *data) {
@@ -84,36 +89,30 @@ namespace P64::Script::C7D3D67FA276A9FE
     return;
   }
 
-  void movePointModelUVs(Object& focusPoint, int8_t pointNumber) {
-    T3DModel* model = focusPoint.getComponent<Comp::Model>()->model;
-    T3DVertPacked* verts = t3d_model_get_vertices(model);
-    
-    float_t xOff = ((pointNumber-1)%4)/4.0;
-    float_t yOff = ((pointNumber-1)/4)/2.0;
-    xOff*=64;
-    yOff*=32;
-    int16_t uvXoff = (int16_t)(xOff * (1 << 5));
-    int16_t uvYoff = (int16_t)(yOff * (1 << 5));
-    
-
-    for (uint8_t i=0; i<model->totalVertCount/2; ++i) {
-      verts[i].stA[0]+=uvXoff;
-      verts[i].stA[1]+=uvYoff;
-      verts[i].stB[0]+=uvXoff;
-      verts[i].stB[1]+=uvYoff;
-    }
-  }
-
-  void updatePathPointModels(Object& obj, Data *data) {
-    for (int8_t i=0; i < data->times; i++) {
-      Object* focusPoint = obj.getScene().getObjectById(data->pathPoints[i]);
-      int8_t pointNumber = data->order[i];
-      movePointModelUVs(*focusPoint, pointNumber);
-    }
-  }
-
   bool isPathReady(Object& obj, Data *data) {
-    return data->pathHolder->hasChildren();
+    return obj.hasChildren();
+  }
+
+  // Drawing Functions
+
+
+  void draw_path_point_order_numbers(Object& obj, Data *data) {
+    for (uint8_t i=0; i < data->times; ++i) {
+      Scene& sc = obj.getScene();
+      Object* pathPoint = sc.getObjectById(data->pathPointsIDs[i]);
+      fm_vec3_t screenPos{};
+      t3d_viewport_calc_viewspace_pos(nullptr, &screenPos, &pathPoint->pos);
+
+      if (screenPos.z > 1.0f) return;
+
+      DrawLayer::use2D();
+        rdpq_set_prim_color({0xCC, 0xFF, 0xCC, 0xFF});
+        rdpq_mode_blender(RDPQ_BLENDER_MULTIPLY);
+        Fonts::useNumber();
+        Fonts::printNumber(screenPos.x - 6, screenPos.y - 6, i+1);
+
+      DrawLayer::useDefault();
+    }
   }
 
   // The following functions are called by the engine at different points in the object's lifecycle.
@@ -122,6 +121,10 @@ namespace P64::Script::C7D3D67FA276A9FE
   void init(Object& obj, Data *data)
   {
     // initialization, this is called once when the object spawns
+    
+    // set up font used for drawing path orders later
+    Fonts::init();
+
     makePathPoints(obj, data);
   }
 
@@ -133,19 +136,18 @@ namespace P64::Script::C7D3D67FA276A9FE
   void update(Object& obj, Data *data, float deltaTime)
   {
     // this is called once every frame, put your main logic here
-    if (data->generatingPath && isPathReady(obj, data)) {
-      updatePathPointModels(obj, data);
-      data->generatingPath = false;
-    }
   }
 
   void draw(Object& obj, Data *data, float deltaTime)
   {
     // this is called once every frame, and for every active camera.
     // Put your drawing code here
-    rdpq_text_printf(nullptr, 1, 10, 200, "P: %.2f %.2f",data->cz, data->cy);
-    rdpq_text_printf(nullptr, 1, 10, 180, "Prog: %.5f",data->p);
-    rdpq_text_printf(nullptr, 1, 10, 160, "Mag: %f",data->magnitude);
+
+    draw_path_point_order_numbers(obj, data);
+
+    // rdpq_text_printf(nullptr, 1, 10, 200, "P: %.2f %.2f",data->cz, data->cy);
+    // rdpq_text_printf(nullptr, 1, 10, 180, "Prog: %.5f",data->p);
+    // rdpq_text_printf(nullptr, 1, 10, 160, "Mag: %f",data->magnitude);
   }
 
   void onEvent(Object& obj, Data *data, const ObjectEvent &event)
